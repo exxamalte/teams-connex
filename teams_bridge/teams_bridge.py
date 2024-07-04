@@ -8,6 +8,7 @@ import time
 from json import JSONDecodeError
 
 import httpx
+import platformdirs
 import rumps
 import websockets
 from expiringdict import ExpiringDict
@@ -29,6 +30,7 @@ class TeamsBridge:
         """Initialise Teams bridge application."""
         self.app = rumps.App(APPLICATION_NAME)
         self.set_up_menu()
+        self.configuration_file = os.path.join(platformdirs.user_data_dir(appname=APPLICATION_NAME, ensure_exists=True), CONFIGURATION_FILE_NAME)
         self.configuration: dict = {}
         self.read_configuration()
         self._websocket_connected: bool = False
@@ -192,8 +194,8 @@ class TeamsBridge:
     def read_configuration(self):
         """Read application configuration from file."""
         try:
-            if os.path.isfile(CONFIGURATION_FILE_NAME):
-                with open(CONFIGURATION_FILE_NAME) as stream:
+            if os.path.isfile(self.configuration_file):
+                with open(self.configuration_file) as stream:
                     try:
                         yaml = YAML(typ='safe')
                         configuration = yaml.load(stream)
@@ -206,7 +208,7 @@ class TeamsBridge:
     def write_configuration(self):
         """Write configuration to file."""
         try:
-            with open(CONFIGURATION_FILE_NAME, mode='w') as stream:
+            with open(self.configuration_file, mode='w') as stream:
                 yaml = YAML(typ='safe')
                 yaml.default_flow_style = False
                 yaml.dump(self.configuration, stream)

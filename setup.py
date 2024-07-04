@@ -11,7 +11,11 @@ URL = "TBD"
 REQUIRES = [
     "websockets>=12.0",
     "rumps>=0.4.0",
-    "ruamel.yaml>=0.18.6"
+    "ruamel.yaml>=0.18.6",
+    "httpx>=0.27.0",
+    "expiringdict>=1.2.2",
+    "platformdirs>=4.2.2",
+    "pyinstaller>=6.8.0"
 ]
 
 
