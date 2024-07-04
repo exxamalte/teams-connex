@@ -7,6 +7,7 @@ import threading
 import time
 from json import JSONDecodeError
 
+import httpx
 import rumps
 import websockets
 from ruamel.yaml import YAML, YAMLError
@@ -65,7 +66,8 @@ class TeamsBridge:
 
     def settings(self, sender):
         """Show settings dialogue."""
-        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", WEBHOOK_URI_SAMPLE, dimensions=(640, 20))
+        webhook_uri = self.webhook_uri if self.webhook_uri else WEBHOOK_URI_SAMPLE
+        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", webhook_uri, dimensions=(640, 20))
         response = settings_window.run()
         if response.clicked:
             text_entered = str(response.text)
@@ -100,11 +102,11 @@ class TeamsBridge:
                                 _LOGGER.debug("Sending pairing request")
                                 await websocket.send("{\"action\":\"pair\",\"parameters\":{},\"requestId\":1}")
 
-                            # Your WebSocket logic here
+                            # Reading messages from websocket.
                             message: str | bytes = await websocket.recv()
                             _LOGGER.debug("Received message: %s", message)
                             await self.process_message(message)
-
+                            # Wait 2 seconds before processing more messages.
                             time.sleep(2.0)
                         except websockets.exceptions.ConnectionClosedOK as exc:
                             _LOGGER.debug("Websocket connection closed ok: %s", exc)
@@ -114,6 +116,7 @@ class TeamsBridge:
                             break
             except OSError as exc:
                 _LOGGER.debug("Websocket connection failed: %s", exc)
+                # Wait for 10 seconds before reconnecting.
                 time.sleep(10.0)
 
     def run(self):
@@ -129,7 +132,7 @@ class TeamsBridge:
                 if TEAMS_MESSAGE_TOKEN_REFRESH in decoded_message:
                     await self.process_token_refresh(decoded_message[TEAMS_MESSAGE_TOKEN_REFRESH])
                 if TEAMS_MESSAGE_MEETING_UPDATE in decoded_message:
-                    await self.process_meeting_update(decoded_message[TEAMS_MESSAGE_MEETING_UPDATE])
+                    await self.process_meeting_update(decoded_message)
             except JSONDecodeError as exc:
                 _LOGGER.warning("Unable to decode message: %s", exc)
 
@@ -138,16 +141,27 @@ class TeamsBridge:
         # Example: {"tokenRefresh":"1273d305-d1a5-4484-b623-a65467a72a50"}
         _LOGGER.info("Processing token refresh: %s", token)
         self.token = token
-        # if token:
-        #     self.configuration[CONFIGURATION_TOKEN] = token
-        #     self.write_configuration()
 
     async def process_meeting_update(self, meeting_update: dict):
         """Process a meeting update message."""
         # Example: {"meetingUpdate":{"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         # Example: {"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":false,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
-
         _LOGGER.info("Processing meeting update: %s", meeting_update)
+        if self.webhook_uri:
+            # Home Assistant expects:
+            # * Method: PUT
+            # * Content-Type: application/json
+            # * JSON encoded payload
+            try:
+                with httpx.Client() as client:
+                    headers = {'Content-Type': 'application/json'}
+                    # payload = json.dumps(meeting_update)
+                    r = client.put(self.webhook_uri, headers=headers, json=meeting_update)
+                    _LOGGER.debug("Webhook response: %s", r)
+            except httpx.RequestError as exc:
+                _LOGGER.error("Webhook error: %s", exc)
+        else:
+            _LOGGER.warning("Webhook URI is not set.")
 
     def read_configuration(self):
         """Read application configuration from file."""
