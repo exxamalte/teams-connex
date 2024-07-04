@@ -1,12 +1,14 @@
-import os
+"""Setup of Teams Bridge application."""
 
 from setuptools import find_packages, setup
+
+from teams_bridge.__version__ import __version__
 
 NAME = "teams_bridge"
 AUTHOR = "Malte Franken"
 AUTHOR_EMAIL = "coding@subspace.de"
 DESCRIPTION = "Bridge between Teams and Home Assistant"
-URL = "TBD"
+URL = "https://github.com/exxamalte/teams-bridge"
 
 REQUIRES = [
     "websockets>=12.0",
@@ -15,21 +17,16 @@ REQUIRES = [
     "httpx>=0.27.0",
     "expiringdict>=1.2.2",
     "platformdirs>=4.2.2",
-    "pyinstaller>=6.8.0"
+    "pyinstaller>=6.8.0",
 ]
 
 
-with open("README.md", "r") as fh:
+with open("README.md") as fh:
     long_description = fh.read()
-
-HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = {}
-with open(os.path.join(HERE, NAME, "__version__.py")) as f:
-    exec(f.read(), VERSION)  # pylint: disable=exec-used
 
 setup(
     name=NAME,
-    version=VERSION["__version__"],
+    version=__version__,
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     description=DESCRIPTION,
