@@ -1,8 +1,8 @@
 """Teams bridge application."""
 import logging
 
-from .teams_bridge import TeamsBridge
-from .__version__ import __version__
+from teams_bridge.teams_bridge import TeamsBridge
+from teams_bridge.__version__ import __version__
 
 
 def main():
