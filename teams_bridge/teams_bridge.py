@@ -12,7 +12,7 @@ import websockets
 from ruamel.yaml import YAML, YAMLError
 
 from .consts import TEAMS_MESSAGE_TOKEN_REFRESH, TEAMS_MESSAGE_MEETING_UPDATE, CONFIGURATION_FILE_NAME, \
-    CONFIGURATION_WEBHOOK, CONFIGURATION_TOKEN
+    CONFIGURATION_WEBHOOK, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,13 +53,14 @@ class TeamsBridge:
 
     def settings(self, sender):
         """Show settings dialogue."""
-        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", "http://your-home-assistant:8123/api/webhook/some_hook_id", dimensions=(320, 20))
+        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", WEBHOOK_URI_SAMPLE, dimensions=(320, 20))
         response = settings_window.run()
         if response.clicked:
             text_entered = str(response.text)
             _LOGGER.debug("URL entered: %s", text_entered)
-            self.configuration[CONFIGURATION_WEBHOOK] = text_entered
-            self.write_configuration()
+            if text_entered != WEBHOOK_URI_SAMPLE:
+                self.configuration[CONFIGURATION_WEBHOOK] = text_entered
+                self.write_configuration()
 
     def start_updater_thread(self):
         """Start websocket updater thread."""
