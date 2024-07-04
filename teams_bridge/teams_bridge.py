@@ -16,7 +16,8 @@ from ruamel.yaml import YAML, YAMLError
 from .consts import TEAMS_MESSAGE_TOKEN_REFRESH, TEAMS_MESSAGE_MEETING_UPDATE, CONFIGURATION_FILE_NAME, \
     CONFIGURATION_WEBHOOK_URI, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE, APPLICATION_NAME, WEBSOCKET_HOSTNAME, \
     WEBSOCKET_PORT, WEBSOCKET_MANUFACTURER, WEBSOCKET_APPLICATION_NAME, WEBSOCKET_APPLICATION_VERSION, \
-    MEETING_UPDATE_LAST_MESSAGE, MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS
+    MEETING_UPDATE_LAST_MESSAGE, MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS, WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS, \
+    WEBSOCKET_SLEEP_IN_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,7 +111,7 @@ class TeamsBridge:
                             _LOGGER.debug("Received message: %s", message)
                             await self.process_message(message)
                             # Wait 2 seconds before processing more messages.
-                            time.sleep(2.0)
+                            time.sleep(WEBSOCKET_SLEEP_IN_SECONDS)
                         except websockets.exceptions.ConnectionClosedOK as exc:
                             _LOGGER.debug("Websocket connection closed ok: %s", exc)
                             break
@@ -120,7 +121,7 @@ class TeamsBridge:
             except OSError as exc:
                 _LOGGER.debug("Websocket connection failed: %s", exc)
                 # Wait for 10 seconds before reconnecting.
-                time.sleep(10.0)
+                time.sleep(WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS)
 
     def run(self):
         """Run application components."""
