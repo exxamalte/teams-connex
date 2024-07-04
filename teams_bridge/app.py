@@ -1,4 +1,4 @@
-"""Command-line tool."""
+"""Teams bridge application."""
 import json
 import logging
 import asyncio
@@ -18,6 +18,7 @@ class TeamsBridge:
     """Teams bridge application."""
 
     def __init__(self):
+        """Initialise Teams bridge application."""
         self.config = {
             "app_name": "Teams Bridge"
         }
@@ -32,28 +33,36 @@ class TeamsBridge:
         return self.configuration["token"] if self.configuration and "token" in self.configuration else ""
 
     def set_up_menu(self):
+        """Set up system tray menu."""
         self.app.title = "🥷"
         self.app.menu = ["Settings..."]
 
     def start_system_tray_app(self):
+        """Start system tray application."""
         self.app.run()
 
     @rumps.clicked("Settings...")
     def settings(self):
         """Show settings dialogue."""
-        rumps.alert("Change settings not yet implemented...")
+        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", "http://your-home-assistant:8123/api/webhook/some_hook_id", dimensions=(320, 20))
+        response = settings_window.run()
+        if response.clicked:
+            text_entered = response.text
+            print(text_entered)
 
     def start_updater_thread(self):
+        """Start websocket updater thread."""
         websocket_thread = threading.Thread(target=self.start_websocket_thread)
         websocket_thread.start()
 
     def start_websocket_thread(self):
+        """Start websocket thread."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-
         loop.run_until_complete(self.websocket_handler())
 
     async def websocket_handler(self):
+        """Handle websocket messages."""
         uri = f"ws://localhost:8124?token={self.token}&protocol-version=2.0.0&manufacturer=SubspaceSoftware&device=Mac&app=TeamsBridge&app-version=2.0.26"
 
         async with websockets.connect(uri) as websocket:
@@ -72,6 +81,7 @@ class TeamsBridge:
                     pass
 
     def run(self):
+        """Run application components."""
         self.start_updater_thread()
         self.start_system_tray_app()
 
