@@ -31,6 +31,7 @@ class TeamsBridge:
         self.set_up_menu()
         self.configuration: dict = {}
         self.read_configuration()
+        self._websocket_connected: bool = False
         self.meeting_update_cache = ExpiringDict(max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS)
 
     @property
@@ -58,6 +59,17 @@ class TeamsBridge:
         if new_webhook_uri and new_webhook_uri != WEBHOOK_URI_SAMPLE:
             self.configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
             self.write_configuration()
+
+    @property
+    def websocket_connected(self) -> bool:
+        """Return if websocket is connected."""
+        return self._websocket_connected
+
+    @websocket_connected.setter
+    def websocket_connected(self, connected: bool):
+        """Set status if websocket is connected or not."""
+        self._websocket_connected = connected
+        self.app.title = "🥷🟢" if connected else "🥷⚪️"
 
     def set_up_menu(self):
         """Set up system tray menu."""
@@ -100,6 +112,7 @@ class TeamsBridge:
             try:
                 async with websockets.connect(uri) as websocket:
                     # Inner loop is ensuring that the websocket connection is opened once and kept open.
+                    self.websocket_connected = True
                     while True:
                         try:
                             if not self.token:
@@ -120,6 +133,7 @@ class TeamsBridge:
                             break
             except OSError as exc:
                 _LOGGER.debug("Websocket connection failed: %s", exc)
+                self.websocket_connected = False
                 # Wait for 10 seconds before reconnecting.
                 time.sleep(WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS)
 
