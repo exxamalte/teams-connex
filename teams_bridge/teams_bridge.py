@@ -12,7 +12,7 @@ import websockets
 from ruamel.yaml import YAML, YAMLError
 
 from .consts import TEAMS_MESSAGE_TOKEN_REFRESH, TEAMS_MESSAGE_MEETING_UPDATE, CONFIGURATION_FILE_NAME, \
-    CONFIGURATION_WEBHOOK, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE
+    CONFIGURATION_WEBHOOK_URI, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE, APPLICATION_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,10 +22,7 @@ class TeamsBridge:
 
     def __init__(self):
         """Initialise Teams bridge application."""
-        self.config = {
-            "app_name": "Teams Bridge"
-        }
-        self.app = rumps.App(self.config["app_name"])
+        self.app = rumps.App(APPLICATION_NAME)
         self.set_up_menu()
         self.configuration: dict = {}
         self.read_configuration()
@@ -36,11 +33,25 @@ class TeamsBridge:
         return self.configuration[
             CONFIGURATION_TOKEN] if self.configuration and CONFIGURATION_TOKEN in self.configuration else ""
 
+    @token.setter
+    def token(self, new_token):
+        """Set new token."""
+        if new_token:
+            self.configuration[CONFIGURATION_TOKEN] = new_token
+            self.write_configuration()
+
     @property
-    def webhook(self) -> str:
-        """Return webhook if known, otherwise an empty string."""
+    def webhook_uri(self) -> str:
+        """Return webhook uri if known, otherwise an empty string."""
         return self.configuration[
-            CONFIGURATION_WEBHOOK] if self.configuration and CONFIGURATION_WEBHOOK in self.configuration else ""
+            CONFIGURATION_WEBHOOK_URI] if self.configuration and CONFIGURATION_WEBHOOK_URI in self.configuration else ""
+
+    @webhook_uri.setter
+    def webhook_uri(self, new_webhook_uri):
+        """Set new webhook uri."""
+        if new_webhook_uri and new_webhook_uri != WEBHOOK_URI_SAMPLE:
+            self.configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
+            self.write_configuration()
 
     def set_up_menu(self):
         """Set up system tray menu."""
@@ -58,8 +69,9 @@ class TeamsBridge:
         if response.clicked:
             text_entered = str(response.text)
             _LOGGER.debug("URL entered: %s", text_entered)
+            self.webhook_uri = text_entered
             if text_entered != WEBHOOK_URI_SAMPLE:
-                self.configuration[CONFIGURATION_WEBHOOK] = text_entered
+                self.configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
                 self.write_configuration()
 
     def start_updater_thread(self):
@@ -124,9 +136,10 @@ class TeamsBridge:
         """Process a token refresh message."""
         # Example: {"tokenRefresh":"1273d305-d1a5-4484-b623-a65467a72a50"}
         _LOGGER.info("Processing token refresh: %s", token)
-        if token:
-            self.configuration[CONFIGURATION_TOKEN] = token
-            self.write_configuration()
+        self.token = token
+        # if token:
+        #     self.configuration[CONFIGURATION_TOKEN] = token
+        #     self.write_configuration()
 
     async def process_meeting_update(self, meeting_update: dict):
         """Process a meeting update message."""
