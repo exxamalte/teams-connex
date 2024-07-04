@@ -12,7 +12,8 @@ import websockets
 from ruamel.yaml import YAML, YAMLError
 
 from .consts import TEAMS_MESSAGE_TOKEN_REFRESH, TEAMS_MESSAGE_MEETING_UPDATE, CONFIGURATION_FILE_NAME, \
-    CONFIGURATION_WEBHOOK_URI, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE, APPLICATION_NAME
+    CONFIGURATION_WEBHOOK_URI, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE, APPLICATION_NAME, WEBSOCKET_HOSTNAME, \
+    WEBSOCKET_PORT, WEBSOCKET_MANUFACTURER, WEBSOCKET_APPLICATION_NAME, WEBSOCKET_APPLICATION_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,7 +88,7 @@ class TeamsBridge:
 
     async def websocket_handler(self):
         """Handle websocket messages."""
-        uri = f"ws://localhost:8124?token={self.token}&protocol-version=2.0.0&manufacturer=SubspaceSoftware&device=Mac&app=TeamsBridge&app-version=2.0.26"
+        uri = f"ws://{WEBSOCKET_HOSTNAME}:{WEBSOCKET_PORT}?token={self.token}&protocol-version=2.0.0&manufacturer={WEBSOCKET_MANUFACTURER}&device=Mac&app={WEBSOCKET_APPLICATION_NAME}&app-version={WEBSOCKET_APPLICATION_VERSION}"
         # Outer loop is ensuring that the application is reconnecting to Teams if the connection is completely lost.
         while True:
             try:
