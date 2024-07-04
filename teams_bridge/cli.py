@@ -4,16 +4,14 @@ import logging
 import asyncio
 import threading
 import time
+from json import JSONDecodeError
 
 import rumps
 import websockets
 from ruamel.yaml import YAML, YAMLError
 
-from __version__ import __version__
-
-TEAMS_MESSAGE_MEETING_UPDATE = "meetingUpdate"
-
-TEAMS_MESSAGE_TOKEN_REFRESH = "tokenRefresh"
+from .__version__ import __version__
+from .consts import TEAMS_MESSAGE_MEETING_UPDATE, TEAMS_MESSAGE_TOKEN_REFRESH
 
 
 class TeamsBridge:
@@ -35,13 +33,15 @@ class TeamsBridge:
 
     def set_up_menu(self):
         self.app.title = "🥷"
+        self.app.menu = ["Settings..."]
 
     def start_system_tray_app(self):
-        # self.app = rumps.App('VPN', quit_button=None)
-        # self.app.menu = [
-        #     rumps.MenuItem('Quit', callback=self.disconnect_vpn),
-        # ]
         self.app.run()
+
+    @rumps.clicked("Settings...")
+    def settings(self):
+        """Show settings dialogue."""
+        rumps.alert("Change settings not yet implemented...")
 
     def start_updater_thread(self):
         websocket_thread = threading.Thread(target=self.start_websocket_thread)
@@ -78,11 +78,14 @@ class TeamsBridge:
     async def process_message(self, message: str | bytes):
         """Process an incoming message from Teams."""
         if isinstance(message, str):
-            decoded_message: dict = json.loads(message)
-            if TEAMS_MESSAGE_TOKEN_REFRESH in decoded_message:
-                await self.process_token_refresh(decoded_message[TEAMS_MESSAGE_TOKEN_REFRESH])
-            if TEAMS_MESSAGE_MEETING_UPDATE in decoded_message:
-                await self.process_meeting_update(decoded_message[TEAMS_MESSAGE_MEETING_UPDATE])
+            try:
+                decoded_message: dict = json.loads(message)
+                if TEAMS_MESSAGE_TOKEN_REFRESH in decoded_message:
+                    await self.process_token_refresh(decoded_message[TEAMS_MESSAGE_TOKEN_REFRESH])
+                if TEAMS_MESSAGE_MEETING_UPDATE in decoded_message:
+                    await self.process_meeting_update(decoded_message[TEAMS_MESSAGE_MEETING_UPDATE])
+            except JSONDecodeError as exc:
+                print(exc)
 
     async def process_token_refresh(self, token: str):
         """Process a token refresh message."""
