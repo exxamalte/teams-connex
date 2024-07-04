@@ -10,11 +10,13 @@ from json import JSONDecodeError
 import httpx
 import rumps
 import websockets
+from expiringdict import ExpiringDict
 from ruamel.yaml import YAML, YAMLError
 
 from .consts import TEAMS_MESSAGE_TOKEN_REFRESH, TEAMS_MESSAGE_MEETING_UPDATE, CONFIGURATION_FILE_NAME, \
     CONFIGURATION_WEBHOOK_URI, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE, APPLICATION_NAME, WEBSOCKET_HOSTNAME, \
-    WEBSOCKET_PORT, WEBSOCKET_MANUFACTURER, WEBSOCKET_APPLICATION_NAME, WEBSOCKET_APPLICATION_VERSION
+    WEBSOCKET_PORT, WEBSOCKET_MANUFACTURER, WEBSOCKET_APPLICATION_NAME, WEBSOCKET_APPLICATION_VERSION, \
+    MEETING_UPDATE_LAST_MESSAGE, MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +30,7 @@ class TeamsBridge:
         self.set_up_menu()
         self.configuration: dict = {}
         self.read_configuration()
+        self.meeting_update_cache = ExpiringDict(max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS)
 
     @property
     def token(self) -> str:
@@ -147,21 +150,29 @@ class TeamsBridge:
         # Example: {"meetingUpdate":{"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         # Example: {"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":false,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         _LOGGER.info("Processing meeting update: %s", meeting_update)
-        if self.webhook_uri:
-            # Home Assistant expects:
-            # * Method: PUT
-            # * Content-Type: application/json
-            # * JSON encoded payload
-            try:
-                with httpx.Client() as client:
-                    headers = {'Content-Type': 'application/json'}
-                    # payload = json.dumps(meeting_update)
-                    r = client.put(self.webhook_uri, headers=headers, json=meeting_update)
-                    _LOGGER.debug("Webhook response: %s", r)
-            except httpx.RequestError as exc:
-                _LOGGER.error("Webhook error: %s", exc)
+        # Don't send the same message payload twice in a row within 30 seconds.
+        if MEETING_UPDATE_LAST_MESSAGE in self.meeting_update_cache and self.meeting_update_cache[
+            MEETING_UPDATE_LAST_MESSAGE] == meeting_update:
+            _LOGGER.debug("Ignoring meeting update because it is the same information already sent within the last %s seconds",
+                          MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS)
         else:
-            _LOGGER.warning("Webhook URI is not set.")
+            if self.webhook_uri:
+                # Home Assistant expects:
+                # * Method: PUT
+                # * Content-Type: application/json
+                # * JSON encoded payload
+                try:
+                    with httpx.Client() as client:
+                        headers = {'Content-Type': 'application/json'}
+                        # payload = json.dumps(meeting_update)
+                        r = client.put(self.webhook_uri, headers=headers, json=meeting_update)
+                        _LOGGER.debug("Webhook response: %s", r)
+                        # Update cache
+                        self.meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] = meeting_update
+                except httpx.RequestError as exc:
+                    _LOGGER.error("Webhook error: %s", exc)
+            else:
+                _LOGGER.warning("Webhook URI is not set.")
 
     def read_configuration(self):
         """Read application configuration from file."""
