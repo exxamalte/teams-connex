@@ -1,24 +1,38 @@
 """Teams bridge."""
+
 import asyncio
 import json
+from json import JSONDecodeError
 import logging
 import os
 import threading
 import time
-from json import JSONDecodeError
 
+from expiringdict import ExpiringDict
 import httpx
 import platformdirs
+from ruamel.yaml import YAML, YAMLError
 import rumps
 import websockets
-from expiringdict import ExpiringDict
-from ruamel.yaml import YAML, YAMLError
 
-from teams_bridge.consts import TEAMS_MESSAGE_TOKEN_REFRESH, TEAMS_MESSAGE_MEETING_UPDATE, CONFIGURATION_FILE_NAME, \
-    CONFIGURATION_WEBHOOK_URI, CONFIGURATION_TOKEN, WEBHOOK_URI_SAMPLE, APPLICATION_NAME, WEBSOCKET_HOSTNAME, \
-    WEBSOCKET_PORT, WEBSOCKET_MANUFACTURER, WEBSOCKET_APPLICATION_NAME, WEBSOCKET_APPLICATION_VERSION, \
-    MEETING_UPDATE_LAST_MESSAGE, MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS, WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS, \
-    WEBSOCKET_SLEEP_IN_SECONDS
+from teams_bridge.consts import (
+    APPLICATION_NAME,
+    CONFIGURATION_FILE_NAME,
+    CONFIGURATION_TOKEN,
+    CONFIGURATION_WEBHOOK_URI,
+    MEETING_UPDATE_LAST_MESSAGE,
+    MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS,
+    TEAMS_MESSAGE_MEETING_UPDATE,
+    TEAMS_MESSAGE_TOKEN_REFRESH,
+    WEBHOOK_URI_SAMPLE,
+    WEBSOCKET_APPLICATION_NAME,
+    WEBSOCKET_APPLICATION_VERSION,
+    WEBSOCKET_HOSTNAME,
+    WEBSOCKET_MANUFACTURER,
+    WEBSOCKET_PORT,
+    WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS,
+    WEBSOCKET_SLEEP_IN_SECONDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,17 +44,25 @@ class TeamsBridge:
         """Initialise Teams bridge application."""
         self.app = rumps.App(APPLICATION_NAME)
         self.set_up_menu()
-        self.configuration_file = os.path.join(platformdirs.user_data_dir(appname=APPLICATION_NAME, ensure_exists=True), CONFIGURATION_FILE_NAME)
+        self.configuration_file = os.path.join(
+            platformdirs.user_data_dir(appname=APPLICATION_NAME, ensure_exists=True),
+            CONFIGURATION_FILE_NAME,
+        )
         self.configuration: dict = {}
         self.read_configuration()
         self._websocket_connected: bool = False
-        self.meeting_update_cache = ExpiringDict(max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS)
+        self.meeting_update_cache = ExpiringDict(
+            max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS
+        )
 
     @property
     def token(self) -> str:
         """Return token if known, otherwise an empty string."""
-        return self.configuration[
-            CONFIGURATION_TOKEN] if self.configuration and CONFIGURATION_TOKEN in self.configuration else ""
+        return (
+            self.configuration[CONFIGURATION_TOKEN]
+            if self.configuration and CONFIGURATION_TOKEN in self.configuration
+            else ""
+        )
 
     @token.setter
     def token(self, new_token):
@@ -52,8 +74,11 @@ class TeamsBridge:
     @property
     def webhook_uri(self) -> str:
         """Return webhook uri if known, otherwise an empty string."""
-        return self.configuration[
-            CONFIGURATION_WEBHOOK_URI] if self.configuration and CONFIGURATION_WEBHOOK_URI in self.configuration else ""
+        return (
+            self.configuration[CONFIGURATION_WEBHOOK_URI]
+            if self.configuration and CONFIGURATION_WEBHOOK_URI in self.configuration
+            else ""
+        )
 
     @webhook_uri.setter
     def webhook_uri(self, new_webhook_uri):
@@ -85,7 +110,9 @@ class TeamsBridge:
     def settings(self, sender):
         """Show settings dialogue."""
         webhook_uri = self.webhook_uri if self.webhook_uri else WEBHOOK_URI_SAMPLE
-        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", webhook_uri, dimensions=(640, 20))
+        settings_window = rumps.Window(
+            "Enter the Webhook URL here", "Settings", webhook_uri, dimensions=(640, 20)
+        )
         response = settings_window.run()
         if response.clicked:
             text_entered = str(response.text)
@@ -115,11 +142,13 @@ class TeamsBridge:
                 async with websockets.connect(uri) as websocket:
                     # Inner loop is ensuring that the websocket connection is opened once and kept open.
                     self.websocket_connected = True
-                    while True:
-                        try:
+                    try:
+                        while True:
                             if not self.token:
                                 _LOGGER.debug("Sending pairing request")
-                                await websocket.send("{\"action\":\"pair\",\"parameters\":{},\"requestId\":1}")
+                                await websocket.send(
+                                    '{"action":"pair","parameters":{},"requestId":1}'
+                                )
 
                             # Reading messages from websocket.
                             message: str | bytes = await websocket.recv()
@@ -127,13 +156,11 @@ class TeamsBridge:
                             await self.process_message(message)
                             # Wait 2 seconds before processing more messages.
                             time.sleep(WEBSOCKET_SLEEP_IN_SECONDS)
-                        except websockets.exceptions.ConnectionClosedOK as exc:
-                            _LOGGER.debug("Websocket connection closed ok: %s", exc)
-                            break
-                        except websockets.exceptions.ConnectionClosedError as exc:
-                            _LOGGER.debug("Websocket connection closed error: %s", exc)
-                            break
-            except OSError as exc:
+                    except websockets.exceptions.ConnectionClosedOK as exc:
+                        _LOGGER.debug("Websocket connection closed ok: %s", exc)
+                    except websockets.exceptions.ConnectionClosedError as exc:
+                        _LOGGER.debug("Websocket connection closed error: %s", exc)
+            except OSError as exc:  # noqa: PERF203
                 _LOGGER.debug("Websocket connection failed: %s", exc)
                 self.websocket_connected = False
                 # Wait for 10 seconds before reconnecting.
@@ -150,7 +177,9 @@ class TeamsBridge:
             try:
                 decoded_message: dict = json.loads(message)
                 if TEAMS_MESSAGE_TOKEN_REFRESH in decoded_message:
-                    await self.process_token_refresh(decoded_message[TEAMS_MESSAGE_TOKEN_REFRESH])
+                    await self.process_token_refresh(
+                        decoded_message[TEAMS_MESSAGE_TOKEN_REFRESH]
+                    )
                 if TEAMS_MESSAGE_MEETING_UPDATE in decoded_message:
                     await self.process_meeting_update(decoded_message)
             except JSONDecodeError as exc:
@@ -168,28 +197,35 @@ class TeamsBridge:
         # Example: {"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":false,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         _LOGGER.info("Processing meeting update: %s", meeting_update)
         # Don't send the same message payload twice in a row within 30 seconds.
-        if MEETING_UPDATE_LAST_MESSAGE in self.meeting_update_cache and self.meeting_update_cache[
-            MEETING_UPDATE_LAST_MESSAGE] == meeting_update:
-            _LOGGER.debug("Ignoring meeting update because it is the same information already sent within the last %s seconds",
-                          MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS)
+        if (
+            MEETING_UPDATE_LAST_MESSAGE in self.meeting_update_cache
+            and self.meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] == meeting_update
+        ):
+            _LOGGER.debug(
+                "Ignoring meeting update because it is the same information already sent within the last %s seconds",
+                MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS,
+            )
+        elif self.webhook_uri:
+            # Home Assistant expects:
+            # * Method: PUT
+            # * Content-Type: application/json
+            # * JSON encoded payload
+            try:
+                with httpx.Client() as client:
+                    headers = {"Content-Type": "application/json"}
+                    # payload = json.dumps(meeting_update)
+                    r = client.put(
+                        self.webhook_uri, headers=headers, json=meeting_update
+                    )
+                    _LOGGER.debug("Webhook response: %s", r)
+                    # Update cache
+                    self.meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] = (
+                        meeting_update
+                    )
+            except httpx.RequestError as exc:
+                _LOGGER.error("Webhook error: %s", exc)
         else:
-            if self.webhook_uri:
-                # Home Assistant expects:
-                # * Method: PUT
-                # * Content-Type: application/json
-                # * JSON encoded payload
-                try:
-                    with httpx.Client() as client:
-                        headers = {'Content-Type': 'application/json'}
-                        # payload = json.dumps(meeting_update)
-                        r = client.put(self.webhook_uri, headers=headers, json=meeting_update)
-                        _LOGGER.debug("Webhook response: %s", r)
-                        # Update cache
-                        self.meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] = meeting_update
-                except httpx.RequestError as exc:
-                    _LOGGER.error("Webhook error: %s", exc)
-            else:
-                _LOGGER.warning("Webhook URI is not set.")
+            _LOGGER.warning("Webhook URI is not set.")
 
     def read_configuration(self):
         """Read application configuration from file."""
@@ -197,7 +233,7 @@ class TeamsBridge:
             if os.path.isfile(self.configuration_file):
                 with open(self.configuration_file) as stream:
                     try:
-                        yaml = YAML(typ='safe')
+                        yaml = YAML(typ="safe")
                         configuration = yaml.load(stream)
                         self.configuration = configuration if configuration else {}
                     except YAMLError as exc:
@@ -208,8 +244,8 @@ class TeamsBridge:
     def write_configuration(self):
         """Write configuration to file."""
         try:
-            with open(self.configuration_file, mode='w') as stream:
-                yaml = YAML(typ='safe')
+            with open(self.configuration_file, mode="w") as stream:
+                yaml = YAML(typ="safe")
                 yaml.default_flow_style = False
                 yaml.dump(self.configuration, stream)
         except OSError as error:
