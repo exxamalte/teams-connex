@@ -64,7 +64,7 @@ class TeamsBridge:
 
     def settings(self, sender):
         """Show settings dialogue."""
-        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", WEBHOOK_URI_SAMPLE, dimensions=(320, 20))
+        settings_window = rumps.Window("Enter the Webhook URL here", "Settings", WEBHOOK_URI_SAMPLE, dimensions=(640, 20))
         response = settings_window.run()
         if response.clicked:
             text_entered = str(response.text)
