@@ -10,7 +10,8 @@ URL = "TBD"
 
 REQUIRES = [
     "websockets>=12.0",
-    "rumps>=0.4.0"
+    "rumps>=0.4.0",
+    "ruamel.yaml>=0.18.6"
 ]
 
 
