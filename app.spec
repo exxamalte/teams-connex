@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['app.py'],
+    ['teams_bridge/launcher.py'],
     pathex=[],
     binaries=[],
     datas=[],

@@ -5,7 +5,7 @@ import os
 import platformdirs
 
 from teams_bridge.consts import APPLICATION_NAME
-from teams_bridge.teams_bridge import TeamsBridge
+from teams_bridge.app import TeamsBridge
 from teams_bridge.__version__ import __version__
 
 
