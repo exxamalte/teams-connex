@@ -67,9 +67,8 @@ class TeamsBridge:
     @token.setter
     def token(self, new_token):
         """Set new token."""
-        if new_token:
-            self.configuration[CONFIGURATION_TOKEN] = new_token
-            self.write_configuration()
+        self.configuration[CONFIGURATION_TOKEN] = new_token
+        self.write_configuration()
 
     @property
     def webhook_uri(self) -> str:
@@ -196,6 +195,13 @@ class TeamsBridge:
         # Example: {"meetingUpdate":{"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         # Example: {"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":false,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         _LOGGER.info("Processing meeting update: %s", meeting_update)
+        # Check if re-pairing is required.
+        # print("meetingPermissions" in meeting_update)
+        # print("canPair" in meeting_update["meetingPermissions"])
+        # print(bool(meeting_update["meetingPermissions"]["canPair"]))
+        if "meetingPermissions" in meeting_update["meetingUpdate"] and "canPair" in meeting_update["meetingUpdate"]["meetingPermissions"] and bool(meeting_update["meetingUpdate"]["meetingPermissions"]["canPair"]):
+            _LOGGER.info("Re-pairing required")
+            self.token = ""
         # Don't send the same message payload twice in a row within 30 seconds.
         if (
             MEETING_UPDATE_LAST_MESSAGE in self.meeting_update_cache
