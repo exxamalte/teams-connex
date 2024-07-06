@@ -5,9 +5,11 @@ import json
 from json import JSONDecodeError
 import logging
 import os
+import sys
 import threading
 import time
 
+from autostart import Autostart
 from expiringdict import ExpiringDict
 import httpx
 import platformdirs
@@ -65,7 +67,7 @@ class TeamsBridge:
         )
 
     @token.setter
-    def token(self, new_token):
+    def token(self, new_token: str):
         """Set new token."""
         self.configuration[CONFIGURATION_TOKEN] = new_token
         self.write_configuration()
@@ -80,7 +82,7 @@ class TeamsBridge:
         )
 
     @webhook_uri.setter
-    def webhook_uri(self, new_webhook_uri):
+    def webhook_uri(self, new_webhook_uri: str):
         """Set new webhook uri."""
         if new_webhook_uri and new_webhook_uri != WEBHOOK_URI_SAMPLE:
             self.configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
@@ -97,10 +99,51 @@ class TeamsBridge:
         self._websocket_connected = connected
         self.app.title = "🥷🟢" if connected else "🥷⚪️"
 
+    @property
+    def start_at_login(self) -> bool:
+        """Return if this app is configured to start at login."""
+        autostart = Autostart()
+        autostart_enabled = autostart.is_enabled(APPLICATION_NAME)
+        # LAUNCH_AGENTS_BASE_FOLDER = "~/Library/LaunchAgents"
+        # launch_agent = os.path.join(LAUNCH_AGENTS_BASE_FOLDER, APPLICATION_NAME, ".plist")
+        # launch_agent_exists = os.path.exists(launch_agent)
+        _LOGGER.debug("Start at login: %s", autostart_enabled)
+        return autostart_enabled
+
+    @start_at_login.setter
+    def start_at_login(self, new_value: bool):
+        """Set application to start at login."""
+        autostart = Autostart()
+        if new_value:
+            options = [self.path_to_executable()]
+            autostart.enable(name=APPLICATION_NAME, program_arguments=options)
+        else:
+            autostart.disable(name=APPLICATION_NAME)
+
+    @staticmethod
+    def path_to_executable() -> str:
+        """Get path to this application's executable."""
+        if getattr(sys, "frozen", False):
+            # If the application is run as a bundle, the PyInstaller bootloader
+            # extends the sys module by a flag frozen=True and sets the app
+            # path into variable _MEIPASS'.
+            application_path = sys._MEIPASS  # noqa: SLF001
+        else:
+            application_path = os.path.dirname(os.path.abspath(__file__))
+        _LOGGER.debug("Path to executable: %s", application_path)
+        return application_path
+
     def set_up_menu(self):
         """Set up system tray menu."""
         self.app.title = "🥷"
-        self.app.menu = [rumps.MenuItem(title="Settings...", callback=self.settings)]
+        start_at_login_menu_item = rumps.MenuItem(
+            title="Start at login", callback=self.toggle_start_at_login
+        )
+        start_at_login_menu_item.state = self.start_at_login
+        self.app.menu = [
+            rumps.MenuItem(title="Settings...", callback=self.settings),
+            start_at_login_menu_item,
+        ]
 
     def start_system_tray_app(self):
         """Start system tray application."""
@@ -120,6 +163,11 @@ class TeamsBridge:
             if text_entered != WEBHOOK_URI_SAMPLE:
                 self.configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
                 self.write_configuration()
+
+    def toggle_start_at_login(self, sender):
+        """Choose whether to start the app at login or not."""
+        sender.state = not sender.state
+        self.start_at_login = sender.state
 
     def start_updater_thread(self):
         """Start websocket updater thread."""
