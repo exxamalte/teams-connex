@@ -38,6 +38,7 @@ jobs:
         include:
           - os: macos-latest
             TARGET: macos
+            ARCH: arm64
             CMD_BUILD: >
                 pyinstaller app.spec &&
                 cd dist/ &&
@@ -61,7 +62,6 @@ jobs:
       run: |
         VERSION=${GITHUB_REF_NAME#v}
         echo Version: $VERSION
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version_number=$VERSION" >> $GITHUB_OUTPUT
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
@@ -83,5 +83,5 @@ jobs:
       with:
         upload_url: ${{ steps.get_release_info.outputs.upload_url }}
         asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
-        asset_name: TeamsBridge-${{steps.version.outputs.version_number}}-arm64.zip
+        asset_name: TeamsBridge-${{steps.version.outputs.version_number}}-${{ matrix.TARGET }}-${{ matrix.ARCH }}.zip
         asset_content_type: ${{ matrix.ASSET_MIME}}
