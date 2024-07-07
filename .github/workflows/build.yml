@@ -41,8 +41,8 @@ jobs:
             CMD_BUILD: >
                 pyinstaller app.spec &&
                 cd dist/ &&
-                zip -r9 TeamsBridge-${VERSION}-arm64 Teams\ Bridge.app/
-            OUT_FILE_NAME: TeamsBridge-${VERSION}-arm64.zip
+                zip -r9 TeamsBridge-${GITHUB_REF_NAME#v}-arm64 Teams\ Bridge.app/
+            OUT_FILE_NAME: TeamsBridge-${GITHUB_REF_NAME#v}-arm64.zip
             ASSET_MIME: application/zip
     steps:
     - name: Checkout
@@ -56,11 +56,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Write release version
-      run: |
-        VERSION=${GITHUB_REF_NAME#v}
-        echo Version: $VERSION
-        echo "VERSION=$VERSION" >> $GITHUB_ENV
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
     - name: Load Release URL File from release job
