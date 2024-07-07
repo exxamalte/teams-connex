@@ -41,8 +41,8 @@ jobs:
             CMD_BUILD: >
                 pyinstaller app.spec &&
                 cd dist/ &&
-                echo "VERSION=${{ github.ref }}" >> $GITHUB_ENV
-                echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+                echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_ENV &&
+                echo "VERSION=${VERSION:1}" >> $GITHUB_ENV &&
                 zip -r9 TeamsBridge-${VERSION}-arm64 Teams\ Bridge.app/
             OUT_FILE_NAME: TeamsBridge-${VERSION}-arm64.zip
             ASSET_MIME: application/zip
