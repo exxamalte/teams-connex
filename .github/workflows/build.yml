@@ -41,8 +41,6 @@ jobs:
             CMD_BUILD: >
                 pyinstaller app.spec &&
                 cd dist/ &&
-                echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV &&
-                echo "VERSION=${VERSION#v}" >> $GITHUB_ENV &&
                 zip -r9 TeamsBridge-${VERSION}-arm64 Teams\ Bridge.app/
             OUT_FILE_NAME: TeamsBridge-${VERSION}-arm64.zip
             ASSET_MIME: application/zip
@@ -58,10 +56,11 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-#    - name: Set VERSION variable from tag
-#      run: |
-#        echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-#        echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+    - name: Write release version
+      run: |
+        VERSION=${GITHUB_REF_NAME#v}
+        echo Version: $VERSION
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
     - name: Load Release URL File from release job
