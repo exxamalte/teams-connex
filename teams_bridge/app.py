@@ -9,7 +9,6 @@ import sys
 import threading
 import time
 
-from autostart import Autostart
 from expiringdict import ExpiringDict
 import httpx
 import platformdirs
@@ -17,6 +16,7 @@ from ruamel.yaml import YAML, YAMLError
 import rumps
 import websockets
 
+from teams_bridge.autostart import Autostart
 from teams_bridge.consts import (
     APPLICATION_NAME,
     CONFIGURATION_FILE_NAME,
