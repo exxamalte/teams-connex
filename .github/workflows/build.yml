@@ -63,6 +63,7 @@ jobs:
       uses: sayyid5416/pyinstaller@v1
       with:
         python_ver: '3.12'
+        python_arch: 'arm64'
         pyinstaller_ver: '==6.8.0'
         spec: 'app.spec'
         requirements: 'requirements.txt'
