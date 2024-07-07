@@ -21,71 +21,76 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: true
-#    - name: Output Release URL File
-#      run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
-#    - name: Save Release URL File for publish
-#      uses: actions/upload-artifact@v1
-#      with:
-#        name: release_url
-#        path: release_url.txt
+    - name: Output Release URL File
+      run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+    - name: Save Release URL File for publish
+      uses: actions/upload-artifact@v1
+      with:
+        name: release_url
+        path: release_url.txt
 
   build:
     name: Build packages
     needs: createrelease
     runs-on: macos-latest
-#    strategy:
-#      matrix:
-#        include:
-#          - os: macos-latest
-#            TARGET: macos
-#            CMD_BUILD: >
-#                pyinstaller -F -w -n clipster -i resources/clipster.icns cli.py &&
-#                cd dist/ &&
-#                zip -r9 clipster clipster.app/
-#            OUT_FILE_NAME: clipster.zip
-#            ASSET_MIME: application/zip
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            TARGET: macos
+            CMD_BUILD: >
+                pyinstaller app.spec &&
+                cd dist/ &&
+                zip -r9 TeamsBridge TeamsBridge.app/
+            OUT_FILE_NAME: TeamsBridge.zip
+            ASSET_MIME: application/zip
     steps:
-#    - name: Checkout
-#      uses: actions/checkout@v1
-#    - name: Set up Python 3.12
-#      uses: actions/setup-python@v2
-#      with:
-#        python-version: 3.12
-#        architecture: arm64
-#    - name: Install dependencies
-#      run: |
-#        python -m pip install --upgrade pip
-#        pip install -r requirements.txt
-##    - name: Build with pyinstaller for ${{matrix.TARGET}}
-##      run: ${{matrix.CMD_BUILD}}
-    - name: Create Executable
-      id: create_executable
-      uses: sayyid5416/pyinstaller@v1
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v2
       with:
-        python_ver: '3.12'
-        python_arch: 'arm64'
-        pyinstaller_ver: '==6.8.0'
-        spec: 'app.spec'
-        requirements: 'requirements.txt'
-        upload_exe_with_name: 'TeamsBridge'
-#        options: --onefile, --name "My App", --windowed,
-#    - name: Load Release URL File from release job
-#      uses: actions/download-artifact@v1
-#      with:
-#        name: release_url
-#    - name: Get Release File Name & Upload URL
-#      id: get_release_info
-#      shell: bash
+        python-version: 3.12
+        architecture: arm64
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+#    - name: Create Executable
 #      run: |
-#        value=`cat release_url/release_url.txt`
-#        echo ::set-output name=upload_url::$value
-#    - name: Upload Release Asset
-#      id: upload-release-asset
-#      uses: actions/upload-release-asset@v1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        pyinstaller app.spec &&
+#        cd dist/ &&
+#        zip -r9 TeamsBridge TeamsBridge.app/
+    - name: Build with pyinstaller for ${{matrix.TARGET}}
+      run: ${{matrix.CMD_BUILD}}
+#    - name: Create Executable
+#      id: create_executable
+#      uses: sayyid5416/pyinstaller@v1
 #      with:
-#        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
-#        asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
-#        asset_name: ${{ matrix.OUT_FILE_NAME}}
-#        asset_content_type: ${{ matrix.ASSET_MIME}}
+#        python_ver: '3.12'
+#        python_arch: 'arm64'
+#        pyinstaller_ver: '==6.8.0'
+#        spec: 'app.spec'
+#        requirements: 'requirements.txt'
+#        upload_exe_with_name: 'TeamsBridge'
+#        options: --onefile, --name "My App", --windowed,
+    - name: Load Release URL File from release job
+      uses: actions/download-artifact@v1
+      with:
+        name: release_url
+    - name: Get Release File Name & Upload URL
+      id: get_release_info
+      shell: bash
+      run: |
+        value=`cat release_url/release_url.txt`
+        echo ::set-output name=upload_url::$value
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+        asset_path: ./dist/${{ matrix.OUT_FILE_NAME}}
+        asset_name: ${{ matrix.OUT_FILE_NAME}}
+        asset_content_type: ${{ matrix.ASSET_MIME}}
