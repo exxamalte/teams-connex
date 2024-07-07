@@ -41,7 +41,7 @@ jobs:
             CMD_BUILD: >
                 pyinstaller app.spec &&
                 cd dist/ &&
-                zip -r9 TeamsBridge TeamsBridge.app/
+                zip -r9 TeamsBridge Teams\ Bridge.app/
             OUT_FILE_NAME: TeamsBridge.zip
             ASSET_MIME: application/zip
     steps:
