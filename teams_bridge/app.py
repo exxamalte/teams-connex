@@ -8,6 +8,7 @@ import os
 import sys
 import threading
 import time
+import webbrowser
 
 from expiringdict import ExpiringDict
 import httpx
@@ -162,6 +163,7 @@ class TeamsBridge:
             rumps.MenuItem(title="Settings...", callback=self.settings),
             start_at_login_menu_item,
             rumps.MenuItem(title="About...", callback=self.about),
+            rumps.MenuItem(title="Help", callback=self.help),
         ]
 
     def start_system_tray_app(self):
@@ -189,6 +191,10 @@ class TeamsBridge:
             "About",
             f"Teams Bridge for Home Assistant.\nVersion: {__version__}",
         )
+
+    def help(self, sender):
+        """Open help."""
+        webbrowser.open("https://neon.ninja/teams-bridge/", new=2)
 
     def toggle_start_at_login(self, sender):
         """Choose whether to start the app at login or not."""
