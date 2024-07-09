@@ -110,9 +110,6 @@ class TeamsBridge:
         """Return if this app is configured to start at login."""
         autostart = Autostart()
         autostart_enabled = autostart.is_enabled(APPLICATION_NAME)
-        # LAUNCH_AGENTS_BASE_FOLDER = "~/Library/LaunchAgents"
-        # launch_agent = os.path.join(LAUNCH_AGENTS_BASE_FOLDER, APPLICATION_NAME, ".plist")
-        # launch_agent_exists = os.path.exists(launch_agent)
         _LOGGER.debug("Start at login: %s", autostart_enabled)
         return autostart_enabled
 
