@@ -20,6 +20,7 @@ import websockets
 from teams_bridge.__version__ import __version__
 from teams_bridge.autostart import Autostart
 from teams_bridge.consts import (
+    APPLICATION_HOMEPAGE,
     APPLICATION_NAME,
     CONFIGURATION_FILE_NAME,
     CONFIGURATION_TOKEN,
@@ -189,12 +190,12 @@ class TeamsBridge:
         """Show about dialogue."""
         rumps.alert(
             "About",
-            f"Teams Bridge for Home Assistant.\nVersion: {__version__}",
+            f"{APPLICATION_NAME} for Home Assistant.\nVersion: {__version__}",
         )
 
     def help(self, sender):
         """Open help."""
-        webbrowser.open("https://neon.ninja/teams-bridge/", new=2)
+        webbrowser.open(APPLICATION_HOMEPAGE, new=2)
 
     def toggle_start_at_login(self, sender):
         """Choose whether to start the app at login or not."""

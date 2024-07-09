@@ -4,6 +4,7 @@ from typing import Final
 
 APPLICATION_NAME: Final = "Teams Bridge"
 APPLICATION_SHORTENED_NAME: Final = "TeamsBridge"
+APPLICATION_HOMEPAGE: Final = "https://neon.ninja/teams-bridge/"
 
 CONFIGURATION_FILE_NAME: Final = "teams_bridge.yaml"
 
