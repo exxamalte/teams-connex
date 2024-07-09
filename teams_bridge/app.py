@@ -16,6 +16,7 @@ from ruamel.yaml import YAML, YAMLError
 import rumps
 import websockets
 
+from teams_bridge.__version__ import __version__
 from teams_bridge.autostart import Autostart
 from teams_bridge.consts import (
     APPLICATION_NAME,
@@ -160,6 +161,7 @@ class TeamsBridge:
         self.app.menu = [
             rumps.MenuItem(title="Settings...", callback=self.settings),
             start_at_login_menu_item,
+            rumps.MenuItem(title="About...", callback=self.about),
         ]
 
     def start_system_tray_app(self):
@@ -180,6 +182,13 @@ class TeamsBridge:
             if text_entered != WEBHOOK_URI_SAMPLE:
                 self.configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
                 self.write_configuration()
+
+    def about(self, sender):
+        """Show about dialogue."""
+        rumps.alert(
+            "About",
+            f"Teams Bridge for Home Assistant.\nVersion: {__version__}",
+        )
 
     def toggle_start_at_login(self, sender):
         """Choose whether to start the app at login or not."""
