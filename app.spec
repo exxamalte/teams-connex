@@ -45,7 +45,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='Teams Bridge.app',
-    icon=None,
+    icon='resources/app-icon.icns',
     bundle_identifier=None,
     version='1',
     info_plist={
