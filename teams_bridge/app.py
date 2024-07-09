@@ -97,7 +97,13 @@ class TeamsBridge:
     def websocket_connected(self, connected: bool):
         """Set status if websocket is connected or not."""
         self._websocket_connected = connected
-        self.app.title = "🥷🟢" if connected else "🥷⚪️"
+        self.app.icon = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "../resources/",
+                "statusbar-green.png" if connected else "statusbar-grey.png",
+            )
+        )
 
     @property
     def start_at_login(self) -> bool:
@@ -147,7 +153,9 @@ class TeamsBridge:
 
     def set_up_menu(self):
         """Set up system tray menu."""
-        self.app.title = "🥷"
+        self.app.icon = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "../resources/statusbar-grey.png")
+        )
         start_at_login_menu_item = rumps.MenuItem(
             title="Start at login", callback=self.toggle_start_at_login
         )

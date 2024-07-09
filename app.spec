@@ -5,7 +5,7 @@ a = Analysis(
     ['teams_bridge/launcher.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('resources/*', 'resources')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
