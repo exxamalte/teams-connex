@@ -115,22 +115,34 @@ class TeamsBridge:
         """Set application to start at login."""
         autostart = Autostart()
         if new_value:
-            options = [self.path_to_executable()]
-            autostart.enable(name=APPLICATION_NAME, program_arguments=options)
+            executable = self.path_to_executable()
+            if executable:
+                options = [executable]
+                autostart.enable(name=APPLICATION_NAME, program_arguments=options)
+                _LOGGER.info("Enabled autostart for executable: %s", executable)
+            else:
+                _LOGGER.warning(
+                    "Not running a self-contained executable. Cannot set up autostart."
+                )
+                rumps.alert(
+                    "Error",
+                    "Cannot set up autostart because you are not running Teams Bridge as an application.",
+                )
         else:
             autostart.disable(name=APPLICATION_NAME)
+            _LOGGER.info("Disabled autostart.")
 
     @staticmethod
-    def path_to_executable() -> str:
-        """Get path to this application's executable."""
-        if getattr(sys, "frozen", False):
-            # If the application is run as a bundle, the PyInstaller bootloader
-            # extends the sys module by a flag frozen=True and sets the app
-            # path into variable _MEIPASS'.
-            application_path = sys._MEIPASS  # noqa: SLF001
+    def path_to_executable() -> str | None:
+        """Get path to this application's executable or None if running as a normal Python process."""
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            application_path = sys.executable
+            _LOGGER.debug(
+                "Running in a bundle, path to executable: %s", application_path
+            )
         else:
-            application_path = os.path.dirname(os.path.abspath(__file__))
-        _LOGGER.debug("Path to executable: %s", application_path)
+            application_path = None
+            _LOGGER.debug("Running in a normal Python process")
         return application_path
 
     def set_up_menu(self):
@@ -166,8 +178,8 @@ class TeamsBridge:
 
     def toggle_start_at_login(self, sender):
         """Choose whether to start the app at login or not."""
-        sender.state = not sender.state
-        self.start_at_login = sender.state
+        self.start_at_login = not sender.state
+        sender.state = self.start_at_login
 
     def start_updater_thread(self):
         """Start websocket updater thread."""
