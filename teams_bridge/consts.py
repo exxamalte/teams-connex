@@ -3,6 +3,7 @@
 from typing import Final
 
 APPLICATION_NAME: Final = "Teams Bridge"
+APPLICATION_SHORTENED_NAME: Final = "TeamsBridge"
 
 CONFIGURATION_FILE_NAME: Final = "teams_bridge.yaml"
 
@@ -20,7 +21,7 @@ WEBHOOK_URI_SAMPLE: Final = "http://your-home-assistant:8123/api/webhook/some_ho
 WEBSOCKET_HOSTNAME: Final = "localhost"
 WEBSOCKET_PORT: Final = 8124
 WEBSOCKET_MANUFACTURER: Final = "SubspaceSoftware"
-WEBSOCKET_APPLICATION_NAME: Final = "TeamsBridge"
+WEBSOCKET_APPLICATION_NAME: Final = APPLICATION_SHORTENED_NAME
 WEBSOCKET_APPLICATION_VERSION: Final = "1"
 
 WEBSOCKET_SLEEP_IN_SECONDS: Final = 2.0

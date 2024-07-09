@@ -7,7 +7,7 @@ import platformdirs
 
 from teams_bridge.__version__ import __version__
 from teams_bridge.app import TeamsBridge
-from teams_bridge.consts import APPLICATION_NAME
+from teams_bridge.consts import APPLICATION_NAME, APPLICATION_SHORTENED_NAME
 
 
 def main():
@@ -15,7 +15,7 @@ def main():
     # Set up logger.
     logfile = os.path.join(
         platformdirs.user_log_dir(appname=APPLICATION_NAME, ensure_exists=True),
-        "app.log",
+        f"{APPLICATION_SHORTENED_NAME}.log",
     )
     logging.basicConfig(
         level=logging.INFO,
@@ -23,7 +23,7 @@ def main():
         filename=logfile,
     )
     logger = logging.getLogger(__name__)
-    logger.info("Teams Bridge (version %s)...", __version__)
+    logger.info("%s started (version %s)...", APPLICATION_NAME, __version__)
     # Start application.
     app = TeamsBridge()
     app.run()
