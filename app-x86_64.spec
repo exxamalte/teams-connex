@@ -46,7 +46,7 @@ app = BUNDLE(
     coll,
     name='Teams Connex.app',
     icon='resources/app-icon.icns',
-    bundle_identifier=None,
+    bundle_identifier='ninja.neon',
     version='1',
     info_plist={
         'LSUIElement': True,
