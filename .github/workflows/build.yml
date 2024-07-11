@@ -45,6 +45,15 @@ jobs:
                 zip -r9 TeamsConnex Teams\ Connex.app/
             OUT_FILE_NAME: TeamsConnex.zip
             ASSET_MIME: application/zip
+          - os: macos-latest
+            TARGET: macos
+            ARCH: x86_64
+            CMD_BUILD: >
+                pyinstaller app.spec &&
+                cd dist/ &&
+                zip -r9 TeamsConnex Teams\ Connex.app/
+            OUT_FILE_NAME: TeamsConnex.zip
+            ASSET_MIME: application/zip
     steps:
     - name: Checkout
       uses: actions/checkout@v1
