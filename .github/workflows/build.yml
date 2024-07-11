@@ -40,7 +40,7 @@ jobs:
             TARGET: macos
             ARCH: arm64
             CMD_BUILD: >
-                pyinstaller app.spec &&
+                pyinstaller app-arm64.spec &&
                 cd dist/ &&
                 zip -r9 TeamsConnex Teams\ Connex.app/
             OUT_FILE_NAME: TeamsConnex.zip
@@ -49,7 +49,7 @@ jobs:
             TARGET: macos
             ARCH: x86_64
             CMD_BUILD: >
-                pyinstaller app.spec &&
+                pyinstaller app-x86_64.spec &&
                 cd dist/ &&
                 zip -r9 TeamsConnex Teams\ Connex.app/
             OUT_FILE_NAME: TeamsConnex.zip
