@@ -21,7 +21,7 @@ WEBHOOK_URI_SAMPLE: Final = "http://your-home-assistant:8123/api/webhook/some_ho
 
 WEBSOCKET_HOSTNAME: Final = "localhost"
 WEBSOCKET_PORT: Final = 8124
-WEBSOCKET_MANUFACTURER: Final = "SubspaceSoftware"
+WEBSOCKET_MANUFACTURER: Final = "NeonNinjaSoftware"
 WEBSOCKET_APPLICATION_NAME: Final = APPLICATION_SHORTENED_NAME
 WEBSOCKET_APPLICATION_VERSION: Final = "1"
 
