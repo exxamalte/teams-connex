@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['teams_bridge/launcher.py'],
+    ['teams_connex/launcher.py'],
     pathex=[],
     binaries=[],
     datas=[('resources/*', 'resources')],
@@ -44,7 +44,7 @@ coll = COLLECT(
 )
 app = BUNDLE(
     coll,
-    name='Teams Bridge.app',
+    name='Teams Connex.app',
     icon='resources/app-icon.icns',
     bundle_identifier=None,
     version='1',

@@ -2,11 +2,11 @@
 
 from typing import Final
 
-APPLICATION_NAME: Final = "Teams Bridge"
-APPLICATION_SHORTENED_NAME: Final = "TeamsBridge"
-APPLICATION_HOMEPAGE: Final = "https://neon.ninja/teams-bridge/"
+APPLICATION_NAME: Final = "Teams Connex"
+APPLICATION_SHORTENED_NAME: Final = "TeamsConnex"
+APPLICATION_HOMEPAGE: Final = "https://neon.ninja/teams-connex/"
 
-CONFIGURATION_FILE_NAME: Final = "teams_bridge.yaml"
+CONFIGURATION_FILE_NAME: Final = "teams_connex.yaml"
 
 CONFIGURATION_WEBHOOK_URI: Final = "webhook_uri"
 CONFIGURATION_TOKEN: Final = "token"

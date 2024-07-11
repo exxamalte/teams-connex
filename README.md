@@ -1,4 +1,4 @@
-# Teams Bridge for Home Assistant
+# Teams Connex for Home Assistant
 
 
 ## Home Assistant
@@ -71,7 +71,7 @@ template:
 ```
 
 
-## Configuring Teams Bridge
+## Configuring Teams Connex
 
 ### Installing the app
 

@@ -103,7 +103,7 @@ ignore = [
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = [
-    "teams_bridge",
+    "teams_connex",
 ]
 combine-as-imports = true
 split-on-trailing-comma = false

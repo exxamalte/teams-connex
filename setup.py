@@ -1,14 +1,14 @@
-"""Setup of Teams Bridge application."""
+"""Setup of Teams Connex application."""
 
 from setuptools import find_packages, setup
 
-from teams_bridge.__version__ import __version__
+from teams_connex.__version__ import __version__
 
-NAME = "teams_bridge"
+NAME = "teams_connex"
 AUTHOR = "Malte Franken"
 AUTHOR_EMAIL = "coding@subspace.de"
-DESCRIPTION = "Bridge between Teams and Home Assistant"
-URL = "https://github.com/exxamalte/teams-bridge"
+DESCRIPTION = "Connex between Teams and Home Assistant"
+URL = "https://github.com/exxamalte/teams-connex"
 
 REQUIRES = [
     "websockets>=12.0",

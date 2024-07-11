@@ -1,4 +1,4 @@
-"""Teams bridge."""
+"""Teams Connex."""
 
 import asyncio
 import json
@@ -17,9 +17,9 @@ from ruamel.yaml import YAML, YAMLError
 import rumps
 import websockets
 
-from teams_bridge.__version__ import __version__
-from teams_bridge.autostart import Autostart
-from teams_bridge.consts import (
+from teams_connex.__version__ import __version__
+from teams_connex.autostart import Autostart
+from teams_connex.consts import (
     APPLICATION_HOMEPAGE,
     APPLICATION_NAME,
     CONFIGURATION_FILE_NAME,
@@ -42,11 +42,11 @@ from teams_bridge.consts import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class TeamsBridge:
-    """Teams bridge."""
+class TeamsConnex:
+    """Teams Connex."""
 
     def __init__(self):
-        """Initialise Teams bridge application."""
+        """Initialise Teams Connex application."""
         self.app = rumps.App(APPLICATION_NAME)
         self.set_up_menu()
         self.configuration_file = os.path.join(
@@ -132,7 +132,7 @@ class TeamsBridge:
                 )
                 rumps.alert(
                     "Error",
-                    "Cannot set up autostart because you are not running Teams Bridge as an application.",
+                    f"Cannot set up autostart because you are not running {APPLICATION_NAME} as an application.",
                 )
         else:
             autostart.disable(name=APPLICATION_NAME)
