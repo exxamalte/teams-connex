@@ -17,7 +17,7 @@ REQUIRES = [
     "httpx>=0.27.0",
     "expiringdict>=1.2.2",
     "platformdirs>=4.2.2",
-    "pyinstaller>=6.8.0",
+    "pyinstaller>=6.9.0",
 ]
 
 
