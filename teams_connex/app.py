@@ -95,6 +95,7 @@ class TeamsConnex:
         if new_webhook_uri and new_webhook_uri != WEBHOOK_URI_SAMPLE:
             self._configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
             self.write_configuration()
+            self.update_statusbar_icon()
 
     @property
     def websocket_connected(self) -> bool:
