@@ -18,7 +18,7 @@ def main():
         f"{APPLICATION_SHORTENED_NAME}.log",
     )
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s %(levelname)s:%(name)s:%(module)s:%(message)s",
         filename=logfile,
     )
