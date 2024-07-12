@@ -34,9 +34,9 @@ from teams_connex.consts import (
     WEBSOCKET_APPLICATION_VERSION,
     WEBSOCKET_HOSTNAME,
     WEBSOCKET_MANUFACTURER,
+    WEBSOCKET_PAIRING_REQUEST_BACKOFF_IN_SECONDS,
     WEBSOCKET_PORT,
     WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS,
-    WEBSOCKET_PAIRING_REQUEST_BACKOFF_IN_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,11 +105,11 @@ class TeamsConnex:
     def websocket_connected(self, connected: bool):
         """Set status if websocket is connected or not."""
         self._websocket_connected = connected
-        self.update_statusbar()
+        self.update_statusbar_icon()
 
-    def update_statusbar(self):
+    def update_statusbar_icon(self):
         """Update the icon in the status bar."""
-        if self.websocket_connected and self.websocket_paired:
+        if self.websocket_connected and self.websocket_paired and self.webhook_uri:
             icon = "statusbar-green.png"
         elif self.websocket_connected:
             icon = "statusbar-blue.png"
@@ -132,12 +132,15 @@ class TeamsConnex:
     def websocket_paired(self, paired: bool):
         """Set status if websocket is paired or not."""
         self._websocket_paired = paired
-        self.update_statusbar()
+        self.update_statusbar_icon()
 
     @property
     def websocket_pairing_request_pending(self) -> bool:
         """Return if websocket pairing request is currently pending."""
-        return "pairing_request_pending" in self._websocket_pairing_request_cache and self._websocket_pairing_request_cache["pairing_request_pending"]
+        return (
+            "pairing_request_pending" in self._websocket_pairing_request_cache
+            and self._websocket_pairing_request_cache["pairing_request_pending"]
+        )
 
     @websocket_pairing_request_pending.setter
     def websocket_pairing_request_pending(self, pending: bool):
@@ -261,8 +264,15 @@ class TeamsConnex:
                     self.websocket_connected = True
                     try:
                         while True:
-                            _LOGGER.debug("Pairing request: %s", self.websocket_pairing_request_pending)
-                            if not self.token and self._websocket_can_pair and not self.websocket_pairing_request_pending:
+                            _LOGGER.debug(
+                                "Pairing request pending: %s",
+                                self.websocket_pairing_request_pending,
+                            )
+                            if (
+                                not self.token
+                                and self._websocket_can_pair
+                                and not self.websocket_pairing_request_pending
+                            ):
                                 _LOGGER.debug("Sending pairing request")
                                 self.websocket_pairing_request_pending = True
                                 await websocket.send(
@@ -347,11 +357,10 @@ class TeamsConnex:
             try:
                 with httpx.Client() as client:
                     headers = {"Content-Type": "application/json"}
-                    # payload = json.dumps(meeting_update)
-                    r = client.put(
+                    response = client.put(
                         self.webhook_uri, headers=headers, json=meeting_update
                     )
-                    _LOGGER.debug("Webhook response: %s", r)
+                    _LOGGER.debug("Webhook response: %s", response)
                     # Update cache
                     self._meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] = (
                         meeting_update
