@@ -53,11 +53,11 @@ class TeamsConnex:
             platformdirs.user_data_dir(appname=APPLICATION_NAME, ensure_exists=True),
             CONFIGURATION_FILE_NAME,
         )
-        self.configuration: dict = {}
+        self._configuration: dict = {}
         self.read_configuration()
         self._websocket_connected: bool = False
         self._websocket_paired: bool = False
-        self.meeting_update_cache = ExpiringDict(
+        self._meeting_update_cache = ExpiringDict(
             max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS
         )
 
@@ -65,23 +65,23 @@ class TeamsConnex:
     def token(self) -> str:
         """Return token if known, otherwise an empty string."""
         return (
-            self.configuration[CONFIGURATION_TOKEN]
-            if self.configuration and CONFIGURATION_TOKEN in self.configuration
+            self._configuration[CONFIGURATION_TOKEN]
+            if self._configuration and CONFIGURATION_TOKEN in self._configuration
             else ""
         )
 
     @token.setter
     def token(self, new_token: str):
         """Set new token."""
-        self.configuration[CONFIGURATION_TOKEN] = new_token
+        self._configuration[CONFIGURATION_TOKEN] = new_token
         self.write_configuration()
 
     @property
     def webhook_uri(self) -> str:
         """Return webhook uri if known, otherwise an empty string."""
         return (
-            self.configuration[CONFIGURATION_WEBHOOK_URI]
-            if self.configuration and CONFIGURATION_WEBHOOK_URI in self.configuration
+            self._configuration[CONFIGURATION_WEBHOOK_URI]
+            if self._configuration and CONFIGURATION_WEBHOOK_URI in self._configuration
             else ""
         )
 
@@ -89,7 +89,7 @@ class TeamsConnex:
     def webhook_uri(self, new_webhook_uri: str):
         """Set new webhook uri."""
         if new_webhook_uri and new_webhook_uri != WEBHOOK_URI_SAMPLE:
-            self.configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
+            self._configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
             self.write_configuration()
 
     @property
@@ -205,7 +205,7 @@ class TeamsConnex:
             _LOGGER.debug("URL entered: %s", text_entered)
             self.webhook_uri = text_entered
             if text_entered != WEBHOOK_URI_SAMPLE:
-                self.configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
+                self._configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
                 self.write_configuration()
 
     def about(self, sender):
@@ -312,8 +312,9 @@ class TeamsConnex:
             self.websocket_paired = self.token
         # Don't send the same message payload twice in a row within 30 seconds.
         if (
-            MEETING_UPDATE_LAST_MESSAGE in self.meeting_update_cache
-            and self.meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] == meeting_update
+            MEETING_UPDATE_LAST_MESSAGE in self._meeting_update_cache
+            and self._meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE]
+            == meeting_update
         ):
             _LOGGER.debug(
                 "Ignoring meeting update because it is the same information already sent within the last %s seconds",
@@ -333,7 +334,7 @@ class TeamsConnex:
                     )
                     _LOGGER.debug("Webhook response: %s", r)
                     # Update cache
-                    self.meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] = (
+                    self._meeting_update_cache[MEETING_UPDATE_LAST_MESSAGE] = (
                         meeting_update
                     )
             except httpx.RequestError as exc:
@@ -349,7 +350,7 @@ class TeamsConnex:
                     try:
                         yaml = YAML(typ="safe")
                         configuration = yaml.load(stream)
-                        self.configuration = configuration if configuration else {}
+                        self._configuration = configuration if configuration else {}
                     except YAMLError as exc:
                         _LOGGER.warning("Unable to read configuration: %s", exc)
         except OSError as error:
@@ -361,6 +362,6 @@ class TeamsConnex:
             with open(self.configuration_file, mode="w") as stream:
                 yaml = YAML(typ="safe")
                 yaml.default_flow_style = False
-                yaml.dump(self.configuration, stream)
+                yaml.dump(self._configuration, stream)
         except OSError as error:
             _LOGGER.warning("Unable to write configuration to file: %s", error)
