@@ -36,7 +36,7 @@ from teams_connex.consts import (
     WEBSOCKET_MANUFACTURER,
     WEBSOCKET_PORT,
     WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS,
-    WEBSOCKET_SLEEP_IN_SECONDS,
+    WEBSOCKET_PAIRING_REQUEST_BACKOFF_IN_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +57,10 @@ class TeamsConnex:
         self.read_configuration()
         self._websocket_connected: bool = False
         self._websocket_paired: bool = False
+        self._websocket_can_pair: bool = False
+        self._websocket_pairing_request_cache = ExpiringDict(
+            max_len=1, max_age_seconds=WEBSOCKET_PAIRING_REQUEST_BACKOFF_IN_SECONDS
+        )
         self._meeting_update_cache = ExpiringDict(
             max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS
         )
@@ -129,6 +133,16 @@ class TeamsConnex:
         """Set status if websocket is paired or not."""
         self._websocket_paired = paired
         self.update_statusbar()
+
+    @property
+    def websocket_pairing_request_pending(self) -> bool:
+        """Return if websocket pairing request is currently pending."""
+        return "pairing_request_pending" in self._websocket_pairing_request_cache and self._websocket_pairing_request_cache["pairing_request_pending"]
+
+    @websocket_pairing_request_pending.setter
+    def websocket_pairing_request_pending(self, pending: bool):
+        """Set if websocket pairing request is currently pending."""
+        self._websocket_pairing_request_cache["pairing_request_pending"] = pending
 
     @property
     def start_at_login(self) -> bool:
@@ -237,34 +251,37 @@ class TeamsConnex:
 
     async def websocket_handler(self):
         """Handle websocket messages."""
-        uri = f"ws://{WEBSOCKET_HOSTNAME}:{WEBSOCKET_PORT}?token={self.token}&protocol-version=2.0.0&manufacturer={WEBSOCKET_MANUFACTURER}&device=Mac&app={WEBSOCKET_APPLICATION_NAME}&app-version={WEBSOCKET_APPLICATION_VERSION}"
         # Outer loop is ensuring that the application is reconnecting to Teams if the connection is completely lost.
         while True:
+            uri = f"ws://{WEBSOCKET_HOSTNAME}:{WEBSOCKET_PORT}?token={self.token}&protocol-version=2.0.0&manufacturer={WEBSOCKET_MANUFACTURER}&device=Mac&app={WEBSOCKET_APPLICATION_NAME}&app-version={WEBSOCKET_APPLICATION_VERSION}"
             try:
                 async with websockets.connect(uri) as websocket:
+                    _LOGGER.debug("Websocket connection opened: %s", uri)
                     # Inner loop is ensuring that the websocket connection is opened once and kept open.
                     self.websocket_connected = True
                     try:
                         while True:
-                            if not self.token:
+                            _LOGGER.debug("Pairing request: %s", self.websocket_pairing_request_pending)
+                            if not self.token and self._websocket_can_pair and not self.websocket_pairing_request_pending:
                                 _LOGGER.debug("Sending pairing request")
+                                self.websocket_pairing_request_pending = True
                                 await websocket.send(
                                     '{"action":"pair","parameters":{},"requestId":1}'
                                 )
-
                             # Reading messages from websocket.
                             message: str | bytes = await websocket.recv()
                             _LOGGER.debug("Received message: %s", message)
                             await self.process_message(message)
-                            # Wait 2 seconds before processing more messages.
-                            time.sleep(WEBSOCKET_SLEEP_IN_SECONDS)
                     except websockets.exceptions.ConnectionClosedOK as exc:
                         _LOGGER.debug("Websocket connection closed ok: %s", exc)
+                        self.websocket_pairing_request_pending = False
                     except websockets.exceptions.ConnectionClosedError as exc:
                         _LOGGER.debug("Websocket connection closed error: %s", exc)
+                        self.websocket_pairing_request_pending = False
             except OSError as exc:  # noqa: PERF203
                 _LOGGER.debug("Websocket connection failed: %s", exc)
                 self.websocket_connected = False
+                self.websocket_pairing_request_pending = False
                 # Wait for 10 seconds before reconnecting.
                 time.sleep(WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS)
 
@@ -298,18 +315,20 @@ class TeamsConnex:
         # Example: {"meetingUpdate":{"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         # Example: {"meetingUpdate":{"meetingState":{"isMuted":false,"isVideoOn":false,"isHandRaised":false,"isInMeeting":false,"isRecordingOn":false,"isBackgroundBlurred":false,"isSharing":false,"hasUnreadMessages":false},"meetingPermissions":{"canToggleMute":false,"canToggleVideo":false,"canToggleHand":false,"canToggleBlur":false,"canLeave":false,"canReact":false,"canToggleShareTray":false,"canToggleChat":false,"canStopSharing":false,"canPair":false}}}
         _LOGGER.info("Processing meeting update: %s", meeting_update)
-        # Check if re-pairing is required.
+        # Check if re-pairing information is available.
         if (
             "meetingPermissions" in meeting_update["meetingUpdate"]
             and "canPair" in meeting_update["meetingUpdate"]["meetingPermissions"]
-            and bool(meeting_update["meetingUpdate"]["meetingPermissions"]["canPair"])
         ):
-            _LOGGER.info("Re-pairing required")
-            self.token = ""
-            self.websocket_paired = False
-        else:
-            # Assume we are paired if the meeting permissions say that we can't pair AND we have a token.
-            self.websocket_paired = self.token
+            if bool(meeting_update["meetingUpdate"]["meetingPermissions"]["canPair"]):
+                self._websocket_can_pair = True
+                _LOGGER.info("Re-pairing required")
+                self.token = ""
+                self.websocket_paired = False
+            else:
+                self._websocket_can_pair = False
+                # Assume we are paired if the meeting permissions say that we can't pair AND we have a token.
+                self.websocket_paired = self.token
         # Don't send the same message payload twice in a row within 30 seconds.
         if (
             MEETING_UPDATE_LAST_MESSAGE in self._meeting_update_cache
