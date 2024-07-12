@@ -56,6 +56,7 @@ class TeamsConnex:
         self.configuration: dict = {}
         self.read_configuration()
         self._websocket_connected: bool = False
+        self._websocket_paired: bool = False
         self.meeting_update_cache = ExpiringDict(
             max_len=1, max_age_seconds=MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS
         )
@@ -100,13 +101,34 @@ class TeamsConnex:
     def websocket_connected(self, connected: bool):
         """Set status if websocket is connected or not."""
         self._websocket_connected = connected
+        self.update_statusbar()
+
+    def update_statusbar(self):
+        """Update the icon in the status bar."""
+        if self.websocket_connected and self.websocket_paired:
+            icon = "statusbar-green.png"
+        elif self.websocket_connected:
+            icon = "statusbar-blue.png"
+        else:
+            icon = "statusbar-grey.png"
         self.app.icon = os.path.abspath(
             os.path.join(
                 os.path.dirname(__file__),
                 "../resources/",
-                "statusbar-green.png" if connected else "statusbar-grey.png",
+                icon,
             )
         )
+
+    @property
+    def websocket_paired(self) -> bool:
+        """Return if websocket is paired."""
+        return self._websocket_paired
+
+    @websocket_paired.setter
+    def websocket_paired(self, paired: bool):
+        """Set status if websocket is paired or not."""
+        self._websocket_paired = paired
+        self.update_statusbar()
 
     @property
     def start_at_login(self) -> bool:
@@ -284,6 +306,10 @@ class TeamsConnex:
         ):
             _LOGGER.info("Re-pairing required")
             self.token = ""
+            self.websocket_paired = False
+        else:
+            # Assume we are paired if the meeting permissions say that we can't pair AND we have a token.
+            self.websocket_paired = self.token
         # Don't send the same message payload twice in a row within 30 seconds.
         if (
             MEETING_UPDATE_LAST_MESSAGE in self.meeting_update_cache
