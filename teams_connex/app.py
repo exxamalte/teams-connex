@@ -110,6 +110,17 @@ class TeamsConnex:
         self._websocket_connected = connected
         self.update_statusbar_icon()
 
+    @property
+    def websocket_paired(self) -> bool:
+        """Return if websocket is paired."""
+        return self._websocket_paired
+
+    @websocket_paired.setter
+    def websocket_paired(self, paired: bool):
+        """Set status if websocket is paired or not."""
+        self._websocket_paired = paired
+        self.update_statusbar_icon()
+
     def update_statusbar_icon(self):
         """Update the icon in the status bar."""
         if self.websocket_connected and self.websocket_paired and self.webhook_uri:
@@ -127,15 +138,20 @@ class TeamsConnex:
         )
 
     @property
-    def websocket_paired(self) -> bool:
-        """Return if websocket is paired."""
-        return self._websocket_paired
+    def debug_mode(self) -> bool:
+        """Return whether the application is running in debug mode or not."""
+        return (
+            self._configuration[CONFIGURATION_DEBUG_MODE]
+            if self._configuration and CONFIGURATION_DEBUG_MODE in self._configuration
+            else False
+        )
 
-    @websocket_paired.setter
-    def websocket_paired(self, paired: bool):
-        """Set status if websocket is paired or not."""
-        self._websocket_paired = paired
-        self.update_statusbar_icon()
+    @debug_mode.setter
+    def debug_mode(self, new_value: bool):
+        """Set application's debug mode."""
+        self._configuration[CONFIGURATION_DEBUG_MODE] = new_value
+        self.write_configuration()
+        self.update_log_level()
 
     @property
     def websocket_pairing_request_pending(self) -> bool:
@@ -214,10 +230,6 @@ class TeamsConnex:
             rumps.MenuItem(title="Help", callback=self.help),
         ]
 
-    def start_system_tray_app(self):
-        """Start system tray application."""
-        self.app.run()
-
     def settings(self, sender):
         """Show settings dialogue."""
         webhook_uri = self.webhook_uri if self.webhook_uri else WEBHOOK_URI_SAMPLE
@@ -233,6 +245,16 @@ class TeamsConnex:
                 self._configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
                 self.write_configuration()
 
+    def toggle_start_at_login(self, sender):
+        """Choose whether to start the app at login or not."""
+        self.start_at_login = not sender.state
+        sender.state = self.start_at_login
+
+    def toggle_debug_mode(self, sender):
+        """Choose whether to run application in debug mode or not."""
+        self.debug_mode = not sender.state
+        sender.state = self.debug_mode
+
     def about(self, sender):
         """Show about dialogue."""
         rumps.alert(
@@ -244,36 +266,10 @@ class TeamsConnex:
         """Open help."""
         webbrowser.open(APPLICATION_HOMEPAGE, new=2)
 
-    def toggle_start_at_login(self, sender):
-        """Choose whether to start the app at login or not."""
-        self.start_at_login = not sender.state
-        sender.state = self.start_at_login
-
-    @property
-    def debug_mode(self) -> bool:
-        """Return whether the application is running in debug mode or not."""
-        return (
-            self._configuration[CONFIGURATION_DEBUG_MODE]
-            if self._configuration and CONFIGURATION_DEBUG_MODE in self._configuration
-            else False
-        )
-
-    @debug_mode.setter
-    def debug_mode(self, new_value: bool):
-        """Set application's debug mode."""
-        self._configuration[CONFIGURATION_DEBUG_MODE] = new_value
-        self.write_configuration()
-        self.update_log_level()
-
     def update_log_level(self):
         """Change log level."""
         root = logging.getLogger()
         root.setLevel(logging.DEBUG if self.debug_mode else logging.INFO)
-
-    def toggle_debug_mode(self, sender):
-        """Choose whether to run application in debug mode or not."""
-        self.debug_mode = not sender.state
-        sender.state = self.debug_mode
 
     def start_updater_thread(self):
         """Start websocket updater thread."""
@@ -328,11 +324,6 @@ class TeamsConnex:
                 self.websocket_pairing_request_pending = False
                 # Wait for 10 seconds before reconnecting.
                 time.sleep(WEBSOCKET_SLEEP_BEFORE_RECONNECT_IN_SECONDS)
-
-    def run(self):
-        """Run application components."""
-        self.start_updater_thread()
-        self.start_system_tray_app()
 
     async def process_message(self, message: str | bytes):
         """Process an incoming message from Teams."""
@@ -427,3 +418,12 @@ class TeamsConnex:
                 yaml.dump(self._configuration, stream)
         except OSError as error:
             _LOGGER.warning("Unable to write configuration to file: %s", error)
+
+    def start_system_tray_app(self):
+        """Start system tray application."""
+        self.app.run()
+
+    def run(self):
+        """Run application components."""
+        self.start_updater_thread()
+        self.start_system_tray_app()
