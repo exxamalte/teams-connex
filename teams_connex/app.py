@@ -22,6 +22,7 @@ from teams_connex.autostart import Autostart
 from teams_connex.consts import (
     APPLICATION_HOMEPAGE,
     APPLICATION_NAME,
+    CONFIGURATION_DEBUG_MODE,
     CONFIGURATION_FILE_NAME,
     CONFIGURATION_TOKEN,
     CONFIGURATION_WEBHOOK_URI,
@@ -48,13 +49,14 @@ class TeamsConnex:
     def __init__(self):
         """Initialise Teams Connex application."""
         self.app = rumps.App(APPLICATION_NAME)
-        self.set_up_menu()
         self.configuration_file = os.path.join(
             platformdirs.user_data_dir(appname=APPLICATION_NAME, ensure_exists=True),
             CONFIGURATION_FILE_NAME,
         )
         self._configuration: dict = {}
         self.read_configuration()
+        self.update_log_level()
+        self.set_up_menu()
         self._websocket_connected: bool = False
         self._websocket_paired: bool = False
         self._websocket_can_pair: bool = False
@@ -200,9 +202,14 @@ class TeamsConnex:
             title="Start at login", callback=self.toggle_start_at_login
         )
         start_at_login_menu_item.state = self.start_at_login
+        debug_mode_menu_item = rumps.MenuItem(
+            title="Debug mode", callback=self.toggle_debug_mode
+        )
+        debug_mode_menu_item.state = self.debug_mode
         self.app.menu = [
             rumps.MenuItem(title="Settings...", callback=self.settings),
             start_at_login_menu_item,
+            debug_mode_menu_item,
             rumps.MenuItem(title="About...", callback=self.about),
             rumps.MenuItem(title="Help", callback=self.help),
         ]
@@ -241,6 +248,32 @@ class TeamsConnex:
         """Choose whether to start the app at login or not."""
         self.start_at_login = not sender.state
         sender.state = self.start_at_login
+
+    @property
+    def debug_mode(self) -> bool:
+        """Return whether the application is running in debug mode or not."""
+        return (
+            self._configuration[CONFIGURATION_DEBUG_MODE]
+            if self._configuration and CONFIGURATION_DEBUG_MODE in self._configuration
+            else False
+        )
+
+    @debug_mode.setter
+    def debug_mode(self, new_value: bool):
+        """Set application's debug mode."""
+        self._configuration[CONFIGURATION_DEBUG_MODE] = new_value
+        self.write_configuration()
+        self.update_log_level()
+
+    def update_log_level(self):
+        """Change log level."""
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG if self.debug_mode else logging.INFO)
+
+    def toggle_debug_mode(self, sender):
+        """Choose whether to run application in debug mode or not."""
+        self.debug_mode = not sender.state
+        sender.state = self.debug_mode
 
     def start_updater_thread(self):
         """Start websocket updater thread."""

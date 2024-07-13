@@ -10,6 +10,7 @@ CONFIGURATION_FILE_NAME: Final = "teams_connex.yaml"
 
 CONFIGURATION_WEBHOOK_URI: Final = "webhook_uri"
 CONFIGURATION_TOKEN: Final = "token"
+CONFIGURATION_DEBUG_MODE: Final = "debug_mode"
 
 MEETING_UPDATE_LAST_MESSAGE: Final = "last_message"
 MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS: Final = 30
