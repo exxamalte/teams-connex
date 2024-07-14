@@ -1,9 +1,12 @@
 """Autostart application after user logs in."""
 
 import getpass
+import logging
 import os
 from pathlib import Path
 import plistlib
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Autostart:
@@ -29,7 +32,8 @@ class Autostart:
         if os.path.exists(path):
             os.remove(path)
         else:
-            raise FileNotFoundError("Unable to find file %s", path)
+            # If the path does not exist, then autostart is disabled, so nothing to worry about here.
+            _LOGGER.debug("Unable to find file %s", path)
 
     def is_enabled(self, name: str) -> bool:
         """Check if autostart for the application under the provided name is enabled."""
