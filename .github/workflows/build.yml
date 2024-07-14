@@ -32,11 +32,11 @@ jobs:
   build:
     name: Build packages
     needs: createrelease
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: macos-latest
+          - os: macos-14-arm64
             TARGET: macos
             ARCH: arm64
             PYARCH: arm64
@@ -46,7 +46,7 @@ jobs:
                 zip -r9 TeamsConnex Teams\ Connex.app/
             OUT_FILE_NAME: TeamsConnex.zip
             ASSET_MIME: application/zip
-          - os: macos-latest
+          - os: macos-14
             TARGET: macos
             ARCH: x86_64
             PYARCH: x64
