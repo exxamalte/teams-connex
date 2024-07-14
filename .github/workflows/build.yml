@@ -46,7 +46,7 @@ jobs:
                 zip -r9 TeamsConnex Teams\ Connex.app/
             OUT_FILE_NAME: TeamsConnex.zip
             ASSET_MIME: application/zip
-          - os: macos-14-large
+          - os: macos-13
             TARGET: macos
             ARCH: x86_64
             PYARCH: x64
