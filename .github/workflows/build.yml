@@ -36,7 +36,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14-arm64
+          - os: macos-latest
             TARGET: macos
             ARCH: arm64
             PYARCH: arm64
