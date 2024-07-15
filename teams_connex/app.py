@@ -238,7 +238,8 @@ class TeamsConnex:
         )
         response = settings_window.run()
         if response.clicked:
-            text_entered = str(response.text)
+            # Convert input to string and strip surrounding whitespace.
+            text_entered = str(response.text).strip()
             _LOGGER.debug("URL entered: %s", text_entered)
             self.webhook_uri = text_entered
             if text_entered != WEBHOOK_URI_SAMPLE:
