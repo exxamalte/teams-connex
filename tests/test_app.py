@@ -1,7 +1,7 @@
 """Test for the main app."""
 
 from unittest import mock
-from unittest.mock import mock_open
+from unittest.mock import ANY, mock_open
 
 from teams_connex.app import TeamsConnex
 from tests.utils import concatenate_writes
@@ -116,3 +116,35 @@ def test_app_configuration_write_values(mock_isdir):
             "  teams_token: test-token-2\n"
             "  webhook_uri: https://your.webhook.url/\n"
         )
+
+
+@mock.patch("logging.Logger.warning")
+@mock.patch("os.path.isdir")
+@mock.patch("os.path.isfile")
+def test_app_configuration_read_error(mock_isfile, mock_isdir, mock_logger):
+    """Test app configuration file defaults."""
+    mock_isfile.return_value = True
+    mock_isdir.return_value = True
+    m = mock_open(read_data="")
+    error = OSError("Test error")
+    m.side_effect = error
+    with mock.patch("builtins.open", m):
+        TeamsConnex()
+        mock_logger.assert_called_with(ANY, error)
+
+
+@mock.patch("logging.Logger.warning")
+@mock.patch("os.path.isdir")
+@mock.patch("os.path.isfile")
+def test_app_configuration_write_error(mock_isfile, mock_isdir, mock_logger):
+    """Test app configuration file defaults."""
+    mock_isfile.return_value = True
+    mock_isdir.return_value = True
+    m = mock_open(read_data="")
+    with mock.patch("builtins.open", m):
+        app = TeamsConnex()
+        error = OSError("Test error")
+        m.side_effect = error
+        # Token
+        app.token = "test-token-3"
+        mock_logger.assert_called_with(ANY, error)

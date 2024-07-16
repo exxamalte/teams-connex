@@ -142,13 +142,16 @@ class TeamsConnex:
             icon = "statusbar-blue.png"
         else:
             icon = "statusbar-grey.png"
-        self.app.icon = os.path.abspath(
-            os.path.join(
-                os.path.dirname(__file__),
-                "../resources/",
-                icon,
+        try:
+            self.app.icon = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "../resources/",
+                    icon,
+                )
             )
-        )
+        except OSError as error:
+            _LOGGER.warning("Unable to set application icon: %s", error)
 
     @property
     def debug_mode(self) -> bool:
@@ -230,9 +233,14 @@ class TeamsConnex:
 
     def set_up_menu(self):
         """Set up system tray menu."""
-        self.app.icon = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../resources/statusbar-grey.png")
-        )
+        try:
+            self.app.icon = os.path.abspath(
+                os.path.join(
+                    os.path.dirname(__file__), "../resources/statusbar-grey.png"
+                )
+            )
+        except OSError as error:
+            _LOGGER.warning("Unable to set application icon: %s", error)
         start_at_login_menu_item = rumps.MenuItem(
             title="Start at login", callback=self.toggle_start_at_login
         )
