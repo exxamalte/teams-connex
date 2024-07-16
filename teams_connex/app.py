@@ -24,6 +24,7 @@ from teams_connex.consts import (
     APPLICATION_NAME,
     CONFIGURATION_DEBUG_MODE,
     CONFIGURATION_FILE_NAME,
+    CONFIGURATION_SETTINGS,
     CONFIGURATION_TOKEN,
     CONFIGURATION_WEBHOOK_URI,
     MEETING_UPDATE_LAST_MESSAGE,
@@ -71,23 +72,29 @@ class TeamsConnex:
     def token(self) -> str:
         """Return token if known, otherwise an empty string."""
         return (
-            self._configuration[CONFIGURATION_TOKEN]
-            if self._configuration and CONFIGURATION_TOKEN in self._configuration
+            self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_TOKEN]
+            if self._configuration
+            and CONFIGURATION_SETTINGS in self._configuration
+            and CONFIGURATION_TOKEN in self._configuration[CONFIGURATION_SETTINGS]
             else ""
         )
 
     @token.setter
     def token(self, new_token: str):
         """Set new token."""
-        self._configuration[CONFIGURATION_TOKEN] = new_token
+        if CONFIGURATION_SETTINGS not in self._configuration:
+            self._configuration[CONFIGURATION_SETTINGS] = {}
+        self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_TOKEN] = new_token
         self.write_configuration()
 
     @property
     def webhook_uri(self) -> str:
         """Return webhook uri if known, otherwise an empty string."""
         return (
-            self._configuration[CONFIGURATION_WEBHOOK_URI]
-            if self._configuration and CONFIGURATION_WEBHOOK_URI in self._configuration
+            self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_WEBHOOK_URI]
+            if self._configuration
+            and CONFIGURATION_SETTINGS in self._configuration
+            and CONFIGURATION_WEBHOOK_URI in self._configuration[CONFIGURATION_SETTINGS]
             else ""
         )
 
@@ -95,7 +102,11 @@ class TeamsConnex:
     def webhook_uri(self, new_webhook_uri: str):
         """Set new webhook uri."""
         if new_webhook_uri and new_webhook_uri != WEBHOOK_URI_SAMPLE:
-            self._configuration[CONFIGURATION_WEBHOOK_URI] = new_webhook_uri
+            if CONFIGURATION_SETTINGS not in self._configuration:
+                self._configuration[CONFIGURATION_SETTINGS] = {}
+            self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_WEBHOOK_URI] = (
+                new_webhook_uri
+            )
             self.write_configuration()
             self.update_statusbar_icon()
 
@@ -141,15 +152,21 @@ class TeamsConnex:
     def debug_mode(self) -> bool:
         """Return whether the application is running in debug mode or not."""
         return (
-            self._configuration[CONFIGURATION_DEBUG_MODE]
-            if self._configuration and CONFIGURATION_DEBUG_MODE in self._configuration
+            self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_DEBUG_MODE]
+            if self._configuration
+            and CONFIGURATION_SETTINGS in self._configuration
+            and CONFIGURATION_DEBUG_MODE in self._configuration[CONFIGURATION_SETTINGS]
             else False
         )
 
     @debug_mode.setter
     def debug_mode(self, new_value: bool):
         """Set application's debug mode."""
-        self._configuration[CONFIGURATION_DEBUG_MODE] = new_value
+        if CONFIGURATION_SETTINGS not in self._configuration:
+            self._configuration[CONFIGURATION_SETTINGS] = {}
+        self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_DEBUG_MODE] = (
+            new_value
+        )
         self.write_configuration()
         self.update_log_level()
 
@@ -243,8 +260,7 @@ class TeamsConnex:
             _LOGGER.debug("URL entered: %s", text_entered)
             self.webhook_uri = text_entered
             if text_entered != WEBHOOK_URI_SAMPLE:
-                self._configuration[CONFIGURATION_WEBHOOK_URI] = text_entered
-                self.write_configuration()
+                self.webhook_uri = text_entered
 
     def toggle_start_at_login(self, sender):
         """Choose whether to start the app at login or not."""
