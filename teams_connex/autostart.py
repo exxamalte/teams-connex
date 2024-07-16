@@ -20,7 +20,11 @@ class Autostart:
 
     def enable(self, name: str, program_arguments: list[str]):
         """Enable autostart for the application under the provided name."""
-        options = {"Label": name, "ProgramArguments": program_arguments}
+        options = {
+            "Label": name,
+            "ProgramArguments": program_arguments,
+            "RunAtLoad": True,
+        }
         # Create path if it doesn't exist.
         Path(self.base_path).mkdir(parents=True, exist_ok=True)
         with open(self.get_path_for_application(name), "wb") as file:
