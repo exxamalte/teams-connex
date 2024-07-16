@@ -25,7 +25,7 @@ from teams_connex.consts import (
     CONFIGURATION_DEBUG_MODE,
     CONFIGURATION_FILE_NAME,
     CONFIGURATION_SETTINGS,
-    CONFIGURATION_TOKEN,
+    CONFIGURATION_TEAMS_TOKEN,
     CONFIGURATION_WEBHOOK_URI,
     MEETING_UPDATE_LAST_MESSAGE,
     MEETING_UPDATE_SEND_BACKOFF_IN_SECONDS,
@@ -72,10 +72,10 @@ class TeamsConnex:
     def token(self) -> str:
         """Return token if known, otherwise an empty string."""
         return (
-            self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_TOKEN]
+            self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_TEAMS_TOKEN]
             if self._configuration
             and CONFIGURATION_SETTINGS in self._configuration
-            and CONFIGURATION_TOKEN in self._configuration[CONFIGURATION_SETTINGS]
+            and CONFIGURATION_TEAMS_TOKEN in self._configuration[CONFIGURATION_SETTINGS]
             else ""
         )
 
@@ -84,7 +84,9 @@ class TeamsConnex:
         """Set new token."""
         if CONFIGURATION_SETTINGS not in self._configuration:
             self._configuration[CONFIGURATION_SETTINGS] = {}
-        self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_TOKEN] = new_token
+        self._configuration[CONFIGURATION_SETTINGS][CONFIGURATION_TEAMS_TOKEN] = (
+            new_token
+        )
         self.write_configuration()
 
     @property
