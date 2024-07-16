@@ -7,10 +7,12 @@ from teams_connex.app import TeamsConnex
 from tests.utils import concatenate_writes
 
 
+@mock.patch("os.path.isdir")
 @mock.patch("os.path.isfile")
-def test_app_configuration_read_defaults(mock_isfile):
+def test_app_configuration_read_defaults(mock_isfile, mock_isdir):
     """Test app configuration file defaults."""
     mock_isfile.return_value = True
+    mock_isdir.return_value = True
     m = mock_open(read_data="")
     with mock.patch("builtins.open", m):
         app = TeamsConnex()
@@ -36,8 +38,10 @@ def test_app_configuration_read_custom_values(mock_isfile):
         assert app.debug_mode
 
 
-def test_app_configuration_write_values():
+@mock.patch("os.path.isdir")
+def test_app_configuration_write_values(mock_isdir):
     """Test write to app configuration file."""
+    mock_isdir.return_value = True
     m = mock_open(read_data="")
     with mock.patch("builtins.open", m):
         app = TeamsConnex()
