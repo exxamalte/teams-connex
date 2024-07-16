@@ -8,8 +8,9 @@ APPLICATION_HOMEPAGE: Final = "https://neon.ninja/teams-connex/"
 
 CONFIGURATION_FILE_NAME: Final = "teams_connex.yaml"
 
+CONFIGURATION_SETTINGS: Final = "settings"
 CONFIGURATION_WEBHOOK_URI: Final = "webhook_uri"
-CONFIGURATION_TOKEN: Final = "token"
+CONFIGURATION_TEAMS_TOKEN: Final = "teams_token"
 CONFIGURATION_DEBUG_MODE: Final = "debug_mode"
 
 MEETING_UPDATE_LAST_MESSAGE: Final = "last_message"
