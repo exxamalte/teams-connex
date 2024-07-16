@@ -39,6 +39,50 @@ def test_app_configuration_read_custom_values(mock_isfile):
 
 
 @mock.patch("os.path.isdir")
+def test_app_configuration_write_token(mock_isdir):
+    """Test write to app configuration file."""
+    mock_isdir.return_value = True
+    m = mock_open(read_data="")
+    with mock.patch("builtins.open", m):
+        app = TeamsConnex()
+        # Token
+        app.token = "test-token-2"
+        m.assert_called_with(app.configuration_file, mode="w")
+        writes = m.return_value.write.mock_calls
+        result = concatenate_writes(writes)
+        assert result == ("settings:\n" "  teams_token: test-token-2\n")
+
+
+@mock.patch("os.path.isdir")
+def test_app_configuration_write_webhook_url(mock_isdir):
+    """Test write to app configuration file."""
+    mock_isdir.return_value = True
+    m = mock_open(read_data="")
+    with mock.patch("builtins.open", m):
+        app = TeamsConnex()
+        # Webhook URL
+        app.webhook_uri = "https://your.webhook.url/"
+        writes = m.return_value.write.mock_calls
+        result = concatenate_writes(writes)
+        assert result == ("settings:\n" "  webhook_uri: https://your.webhook.url/\n")
+
+
+@mock.patch("os.path.isdir")
+def test_app_configuration_write_debug_mode(mock_isdir):
+    """Test write to app configuration file."""
+    mock_isdir.return_value = True
+    m = mock_open(read_data="")
+    with mock.patch("builtins.open", m):
+        app = TeamsConnex()
+        # Debug mode
+        m.reset_mock()
+        app.debug_mode = True
+        writes = m.return_value.write.mock_calls
+        result = concatenate_writes(writes)
+        assert result == ("settings:\n" "  debug_mode: true\n")
+
+
+@mock.patch("os.path.isdir")
 def test_app_configuration_write_values(mock_isdir):
     """Test write to app configuration file."""
     mock_isdir.return_value = True
