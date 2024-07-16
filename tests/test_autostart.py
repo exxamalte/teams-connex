@@ -42,6 +42,8 @@ def test_autostart(mock_path_exists, mock_remove):
             "\t<array>\n"
             "\t\t<string>arg1</string>\n"
             "\t</array>\n"
+            "\t<key>RunAtLoad</key>\n"
+            "\t<true/>\n"
             "</dict>\n"
             "</plist>\n"
         )
