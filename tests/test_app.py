@@ -122,7 +122,7 @@ def test_app_configuration_write_values(mock_isdir):
 @mock.patch("os.path.isdir")
 @mock.patch("os.path.isfile")
 def test_app_configuration_read_error(mock_isfile, mock_isdir, mock_logger):
-    """Test app configuration file defaults."""
+    """Test app configuration read os error."""
     mock_isfile.return_value = True
     mock_isdir.return_value = True
     m = mock_open(read_data="")
@@ -136,8 +136,21 @@ def test_app_configuration_read_error(mock_isfile, mock_isdir, mock_logger):
 @mock.patch("logging.Logger.warning")
 @mock.patch("os.path.isdir")
 @mock.patch("os.path.isfile")
+def test_app_configuration_read_yaml_error(mock_isfile, mock_isdir, mock_logger):
+    """Test app configuration read yaml error."""
+    mock_isfile.return_value = True
+    mock_isdir.return_value = True
+    m = mock_open(read_data="@not_yaml@")
+    with mock.patch("builtins.open", m):
+        TeamsConnex()
+        mock_logger.assert_called_with("Unable to read configuration: %s", ANY)
+
+
+@mock.patch("logging.Logger.warning")
+@mock.patch("os.path.isdir")
+@mock.patch("os.path.isfile")
 def test_app_configuration_write_error(mock_isfile, mock_isdir, mock_logger):
-    """Test app configuration file defaults."""
+    """Test app configuration write os error."""
     mock_isfile.return_value = True
     mock_isdir.return_value = True
     m = mock_open(read_data="")
