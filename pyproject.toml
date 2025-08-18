@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "teams_connex"
 version  = "2024.7.1"
-requires-python = ">= 3.12"
+requires-python = ">= 3.13"
 authors = [
   {name = "Malte Franken", email = "coding@subspace.de"},
 ]
@@ -17,7 +17,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 keywords = ["homeassistant", "teams"]
 classifiers = [
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: MacOS",
     "Topic :: Communications :: Conferencing",
