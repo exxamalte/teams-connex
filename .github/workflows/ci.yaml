@@ -12,11 +12,11 @@ jobs:
     name: Python ${{ matrix.python-version }}
     runs-on: macos-latest
     env:
-      USING_COVERAGE: '3.12'
+      USING_COVERAGE: '3.13'
     strategy:
       fail-fast: true
       matrix:
-        python-version: [ "3.12" ]
+        python-version: [ "3.13" ]
     steps:
       - uses: "actions/checkout@v5"
       - uses: "actions/setup-python@v5"
