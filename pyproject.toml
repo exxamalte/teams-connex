@@ -1,3 +1,56 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teams_connex"
+version  = "2024.7.1"
+requires-python = ">= 3.12"
+authors = [
+  {name = "Malte Franken", email = "coding@subspace.de"},
+]
+description = "Connex between Teams and Home Assistant"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["homeassistant", "teams"]
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Topic :: Communications :: Conferencing",
+    "Topic :: Home Automation",
+    "Development Status :: 5 - Production/Stable",
+]
+dependencies = [
+    "websockets>=12.0",
+    "rumps>=0.4.0",
+    "ruamel.yaml>=0.18.6",
+    "httpx>=0.27.0",
+    "expiringdict>=1.2.2",
+    "platformdirs>=4.2.2",
+    "pyinstaller>=6.9.0",
+]
+
+[project.optional-dependencies]
+tests = [
+    "pytest",
+    "pytest-timeout",
+    "pytest-xdist",
+    "pytest-cov",
+    "coverage"
+]
+
+[project.urls]
+Repository = "https://github.com/exxamalte/teams-connex"
+Issues = "https://github.com/exxamalte/teams-connex/issues"
+Changelog = "https://github.com/exxamalte/teams-connex/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+include = ["teams_connex*"]
+
 [tool.ruff.lint]
 select = [
     "A001", # Variable {name} is shadowing a Python builtin
@@ -107,3 +160,8 @@ known-first-party = [
 ]
 combine-as-imports = true
 split-on-trailing-comma = false
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]

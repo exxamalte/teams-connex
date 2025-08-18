@@ -1,6 +1,7 @@
 """Teams Connex."""
 
 import asyncio
+import importlib.metadata
 import json
 from json import JSONDecodeError
 import logging
@@ -17,7 +18,6 @@ from ruamel.yaml import YAML, YAMLError
 import rumps
 import websockets
 
-from teams_connex.__version__ import __version__
 from teams_connex.autostart import Autostart
 from teams_connex.consts import (
     APPLICATION_HOMEPAGE,
@@ -286,7 +286,7 @@ class TeamsConnex:
         """Show about dialogue."""
         rumps.alert(
             "About",
-            f"{APPLICATION_NAME} for Home Assistant.\nVersion: {__version__}",
+            f"{APPLICATION_NAME} for Home Assistant.\nVersion: {importlib.metadata.version("teams_connex")}",
         )
 
     def help(self, sender):
