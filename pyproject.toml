@@ -30,7 +30,7 @@ dependencies = [
     "ruamel.yaml>=0.19.1",
     "httpx>=0.28.1",
     "expiringdict>=1.2.2",
-    "platformdirs>=4.9.4",
+    "platformdirs>=4.9.6",
     "pyinstaller>=6.19.0",
 ]
 
