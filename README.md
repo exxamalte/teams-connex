@@ -7,6 +7,10 @@
 [![GitHub License](https://img.shields.io/github/license/exxamalte/teams-connex)](https://github.com/exxamalte/teams-connex/blob/main/LICENSE)
 [![Buy me a coffee](https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg)](https://www.buymeacoffee.com/neonninja)
 
+| :warning: WARNING           |
+|:----------------------------|
+| [Microsoft has deprecated the local Teams API](https://feedbackportal.microsoft.com/feedback/idea/f66d7f94-96ef-f011-92b8-7c1e52eaa20d) back in December 2025, and this API has been removed from Teams clients on 30 June 2026. Until I can find something that works locally with Microsoft Teams on macOS, unfortunately this project will remain inactive. |
+
 ![Screenshot](status-bar-menu.png "Status Bar Menu")
 
 Status bar app for macOS that locally connects to Microsoft Teams and forwards meeting information
